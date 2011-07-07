@@ -12,6 +12,7 @@ open Syntax;;
 %token EOL EOF END
 %token LP RP
 %token ADDL REML GETL COMMA
+%token POLICY
 %token HIGH LOW
 
 %left MUL DIV
@@ -49,6 +50,7 @@ exper:
 	| exper EQ exper			{ App(App(eq, $1), $3) }
 	| exper NE exper			{ App(App(ne, $1), $3) }
 	| LET idenList EQ exper IN exper	{ Let($2, $4, $6) }
+	| LET POLICY idenList EQ exper IN exper	{ Let($3, $5, $7) }
 	| IF exper THEN exper ELSE exper	{ App(App(App(branch, $2), $4), $6) }
 ;
 

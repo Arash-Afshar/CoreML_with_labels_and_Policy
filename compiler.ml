@@ -40,7 +40,7 @@ let rec string_of_answer = function
 				else							(* label *)
 					string_of_answer(Value value)^labels		(* label *)
 		end
-	| Error -> 
+	| _ -> 
 		"Not a value!";;
 
 
@@ -68,6 +68,8 @@ let rec string_of_abstract_expr = function
 		"App( "^(string_of_abstract_expr e1)^" , "^(string_of_abstract_expr e2)^")"
 	| Let (v, e1, e2) ->
 		"Let ( \""^(string_of_varList v)^"\" , "^string_of_abstract_expr(e1)^" , "^string_of_abstract_expr(e2)^")"
+	| Let (v, e1, e2) ->
+		"LetP ( \""^(string_of_varList v)^"\" , "^string_of_abstract_expr(e1)^" , "^string_of_abstract_expr(e2)^")"
 	| _ -> "Not an expression!"
 
 
@@ -81,6 +83,8 @@ let rec string_of_concrete_expr = function
 		string_of_concrete_expr(e1)^" "^string_of_concrete_expr(e2)
 	| Let (v, e1, e2) ->
 		"let "^(string_of_varList v)^"="^string_of_concrete_expr(e1)^" in "^string_of_concrete_expr(e2)
+	| Let (v, e1, e2) ->
+		"let policy"^(string_of_varList v)^"="^string_of_concrete_expr(e1)^" in "^string_of_concrete_expr(e2)
 	| _ -> "Not an expression!"
 
 
@@ -104,10 +108,10 @@ let _ =
 		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
 		while true do
 			let result = Parser.main Lexer.token lexbuf in
-			(*print_string(string_of_texp(type_of result)); print_newline(); *)
-			print_string(string_of_concrete_expr(result));  print_newline();
-			print_string(string_of_abstract_expr(result));  print_newline();
-			print_string(string_of_answer(eval [] result)); print_newline();
+			(* print_string(string_of_texp(type_of result)); print_newline(); *)
+			(* print_string(string_of_concrete_expr(result));  print_newline(); *)
+			(* print_string(string_of_abstract_expr(result));  print_newline(); *)
+			print_string(string_of_answer(eval [] "code" result)); print_newline();
 			flush stdout
 		done
 	with Lexer.Eof ->

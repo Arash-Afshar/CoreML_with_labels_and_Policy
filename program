@@ -1,11 +1,11 @@
-let lift a =
+let policy lift a =
 	if (getLab(a)==low) then
 		addLab(high, remLab(a))
 	else
 		a
 
 	in
-	lift addLab(high,1)
+	lift 1
 ;;
 
 

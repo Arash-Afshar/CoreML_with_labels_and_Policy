@@ -10,7 +10,7 @@ let e =
  App(Fun("x", Var "x"), int 1);;
 
 type_of e;;
-eval [] e;;
+eval [] "code" e;;
 
 
 
@@ -39,9 +39,9 @@ let print_answer = function
 				)
 			| Closure (var, ex, env) -> print_string("lambda exp!\n")
 		)
-	| Error -> print_string("Not value!\n");;
+	| _ -> print_string("Not value!\n");;
 
-print_answer ( eval [] e );;
+print_answer ( eval [] "code" e );;
 
 
 
