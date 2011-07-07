@@ -11,6 +11,8 @@ open Syntax;;
 %token <string> IDEN
 %token EOL EOF END
 %token LP RP
+%token ADDL REML GETL COMMA
+%token HIGH LOW
 
 %left MUL DIV
 %left PLUS MINUS
@@ -27,7 +29,12 @@ main:
 	exper END	                	{ $1 }
 ;
 exper:
-	  LP exper RP				{ $2 }
+	  ADDL LP exper COMMA exper RP		{ App(App(addLab, $3), $5) }
+	| REML LP exper RP			{ App(remLab, $3) }
+	| GETL LP exper RP			{ App(getLab, $3) }
+	| LP exper RP				{ $2 }
+	| HIGH					{ Const {name = Lab "high"; arity = 0; constr = false} }
+	| LOW					{ Const {name = Lab "low"; arity = 0; constr = false} }
 	| IDEN					{ Var $1 }
 	| LAM IDEN DOT exper			{ Fun($2,$4) }
 	| exper exper				{ App($1, $2) }
