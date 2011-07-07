@@ -44,6 +44,12 @@ let rec string_of_answer = function
 		"Not a value!";;
 
 
+let rec string_of_varList vl=
+	if (List.length vl)==1 then
+		(List.hd vl)
+	else
+		(List.hd vl)^" "^string_of_varList (List.tl vl);;
+
 let string_of_abstract_name = function
 	  Name s -> "Name \""^s^"\""
 	| Int i -> "Int "^(string_of_int i)
@@ -61,7 +67,7 @@ let rec string_of_abstract_expr = function
 	| App (e1, e2) ->
 		"App( "^(string_of_abstract_expr e1)^" , "^(string_of_abstract_expr e2)^")"
 	| Let (v, e1, e2) ->
-		"Let ( \""^v^"\" , "^string_of_abstract_expr(e1)^" , "^string_of_abstract_expr(e2)^")"
+		"Let ( \""^(string_of_varList v)^"\" , "^string_of_abstract_expr(e1)^" , "^string_of_abstract_expr(e2)^")"
 	| _ -> "Not an expression!"
 
 
@@ -74,7 +80,7 @@ let rec string_of_concrete_expr = function
 	| App (e1, e2) ->
 		string_of_concrete_expr(e1)^" "^string_of_concrete_expr(e2)
 	| Let (v, e1, e2) ->
-		"let "^v^"="^string_of_concrete_expr(e1)^" in "^string_of_concrete_expr(e2)
+		"let "^(string_of_varList v)^"="^string_of_concrete_expr(e1)^" in "^string_of_concrete_expr(e2)
 	| _ -> "Not an expression!"
 
 

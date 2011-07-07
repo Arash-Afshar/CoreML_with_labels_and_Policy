@@ -1,7 +1,7 @@
 open Syntax;;
 
 type env = (string  * value) list 
-and value =  | Closure of var  * expr * env  | Constant of constant  * value list | LabelValue of value * expr list;; (* label *)
+and value =  | Closure of var * expr * env  | Constant of constant  * value list | LabelValue of value * expr list;; (* label *)
 
 type answer = Error  | Value of value;;
 
@@ -80,6 +80,13 @@ let val_getLab v =										(* label *)
 		Error;;										(* label *)
 
 
+let rec create_lam_expr varList expr =
+	if (List.length varList) == 1 then
+		Fun (List.hd varList, expr)
+	else
+		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
+
+
 let delta c  l =
 	match c.name, l with
 	| Name "+", [ Constant ({name=Int second}, []); Constant ({name=Int  first}, [])] ->
@@ -104,14 +111,11 @@ let delta c  l =
 			val_bool (false)
 	| Name "!=", [ Constant ({name=Int second}, []); Constant ({name=Int  first}, [])] ->
 		val_bool (first != second)
-	| Name "branch", [ Constant ({name=Int third}, []); Constant ({name=Int second}, []); Constant ({name=Bool first}, [])] ->
-		let res =
-			if first then second else third in
-			val_int res
-	| Name "branch", [ Constant ({name=Bool third}, []); Constant ({name=Bool second}, []); Constant ({name=Bool first}, [])] ->
-		let res =
-			if first then second else third in
-			val_bool res
+	| Name "branch", [ third; second; Constant ({name=Bool first}, [])] ->
+		if first then
+			Value second
+		else
+			Value third
 	| Name "addLab", [ second; Constant ({name=Lab first}, [])] ->				(* label *)
 		let labConstant = Const {name = Lab first; arity = 0; constr = false} in	(* label *)
 		val_addLab second labConstant							(* label *)
@@ -131,10 +135,13 @@ let rec eval env = function
 	| Const c -> Value  (Constant (c, []))  
 	| Fun (x, a) -> Value (Closure (x, a, env))  
 	| Let (x, a1, a2) ->  
-		begin match eval  env a1 with  
-		| Value v1 -> eval  ((x, v1)::env) a2  
-		| Error -> Error  
-		end  
+		let body = create_lam_expr (List.tl x) a1 in
+		begin match eval env body with
+		| Value v1 ->
+			let newEnv = (List.hd x , v1)::env in
+			eval newEnv a2
+		| Error -> Error
+		end
 	| App (a1, a2) ->  
 		begin match eval  env a1 with  
 		| Value v1 ->  

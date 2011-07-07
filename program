@@ -1,2 +1,11 @@
-high == getLab(addLab(high, 2))
+let lift a =
+	if (getLab(a)==low) then
+		addLab(high, remLab(a))
+	else
+		a
+
+	in
+	lift addLab(high,1)
 ;;
+
+
