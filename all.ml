@@ -3,45 +3,19 @@ open Reduce;;
 open Unify;;
 open Typescheme;;
 open Poly;;
-open Prog;;
+open PrettyPrinter;;
 
 
 let e =  
- App(Fun("x", Var "x"), int 1);;
+LetP ( ["addLabel"; "lab"; "exp"] , App( App( Const { name = Name "addLab"; constr = false; arity = 2} , Var "lab") , Var "exp") , LetP ( ["lift"; "a"] , App( App( App( Const { name = Name "branch"; constr = false; arity = 3} , App( App( Const { name = Name "=="; constr = false; arity = 2} , App( Const { name = Name "getLab"; constr = false; arity = 1} , Var "a")) , Const { name = Lab "low"; constr = false; arity = 0})) , App( App( Const { name = Name "addLab"; constr = false; arity = 2} , Const { name = Lab "high"; constr = false; arity = 0}) , App( Const { name = Name "remLab"; constr = false; arity = 1} , Var "a"))) , Var "a") , App( Var "lift" , App( App( Fun ("x" , Var "x") , App( Var "addLabel" , Const { name = Lab "low"; constr = false; arity = 0})) , Const { name = Int 1; constr = true; arity = 0}))));;
 
+(*
 type_of e;;
 eval [] "code" e;;
-
-
-
-(*let print_answer = function
-	  Value v ->  
-		match v with
-		  Constant (c ,e) -> 
-			match c.name with
-			  Name s -> print_string(s^"\n")
-			| Int i -> print_string(string_of_int i ^ "\n")
-			| _ -> print_string("Not name!\n")
-		| _ -> print_string("Not constant!\n")
-	| _ -> print_string("Not value!\n");;
 *)
 
-let print_answer = function
-	  Value v ->
-		(
-	 		match v with
-			  Constant (c, value) ->
-				(
-					match c.name with
-					  Name s -> print_string(s^"\n")
-					| Int i -> print_string(string_of_int i ^ "\n")
-					| _ -> print_string("Not name!\n")
-				)
-			| Closure (var, ex, color, env) -> print_string("lambda exp!\n")
-		)
-	| _ -> print_string("Not value!\n");;
 
-print_answer ( eval [] "code" e );;
+print_answer ( eval [] "code" e ); print_newline();;
 
 
 

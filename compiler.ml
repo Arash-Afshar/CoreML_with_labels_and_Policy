@@ -1,8 +1,37 @@
+open PrettyPrinter;;
 open Syntax;;
 open Reduce;;
 open Poly;;
 open Unify;;
 
+let _ =
+	try
+		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
+		while true do
+			let result = Parser.main Lexer.token lexbuf in
+			print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();
+			print_string("abstract syntax of expression="); print_newline(); print_abstract_expr(result); print_newline(); print_newline();
+			print_string("type of expression="); print_newline(); print_type(type_of result); print_newline(); print_newline();
+			print_string("value of expression="); print_newline(); print_answer(eval [] "code" result); print_newline(); print_newline();
+			flush stdout
+		done
+	with Lexer.Eof ->
+		exit 0;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(** 
 let string_of_name = function
 	  Name s -> s
 	| Int i -> string_of_int i
@@ -100,21 +129,4 @@ let rec string_of_texp t=
 		| Tbool , l -> "bool"
 		end		
 ;;
-
-
-
-let _ =
-	try
-		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
-		while true do
-			let result = Parser.main Lexer.token lexbuf in
-			(* print_string(string_of_texp(type_of result)); print_newline(); *)
-			(* print_string(string_of_concrete_expr(result));  print_newline(); *)
-			(* print_string(string_of_abstract_expr(result));  print_newline(); *)
-			print_string(string_of_answer(eval [] "code" result)); print_newline();
-			flush stdout
-		done
-	with Lexer.Eof ->
-		exit 0;;
-
-
+**)
