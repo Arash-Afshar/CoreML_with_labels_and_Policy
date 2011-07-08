@@ -1,4 +1,5 @@
 type name = Name of string | Int of int | Bool of bool | Lab of string;; (* label *)
+type color = string;;
 type constant = { name : name; constr : bool; arity : int}
 type var = string
 type varList = var list;;

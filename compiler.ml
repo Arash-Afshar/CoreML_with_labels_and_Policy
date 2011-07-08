@@ -31,8 +31,8 @@ let rec string_of_answer = function
 		begin match v with
 			  Constant (c, value) ->
 				string_of_name c.name
-			| Closure (var, ex, env) -> 
-				"lambda "^var^"."^"body"
+			| Closure (var, ex, c, env) -> 
+				"lambda "^var^"."^"body of "^c
 			| LabelValue (value, expList) ->				(* label *)
 				let labels = "{"^(string_of_labelList expList)^"}" in	(* label *)
 				if (String.compare labels "{}") == 0 then		(* label *)

@@ -30,9 +30,9 @@ main:
 	exper END	                	{ $1 }
 ;
 exper:
-	  ADDL LP exper COMMA exper RP		{ App(App(addLab, $3), $5) }
-	| REML LP exper RP			{ App(remLab, $3) }
-	| GETL LP exper RP			{ App(getLab, $3) }
+	  LP ADDL exper RP exper		{ App(App(addLab, $3), $5) }
+	| REML exper				{ App(remLab, $2) }
+	| GETL exper				{ App(getLab, $2) }
 	| LP exper RP				{ $2 }
 	| HIGH					{ Const {name = Lab "high"; arity = 0; constr = false} }
 	| LOW					{ Const {name = Lab "low"; arity = 0; constr = false} }
@@ -50,7 +50,7 @@ exper:
 	| exper EQ exper			{ App(App(eq, $1), $3) }
 	| exper NE exper			{ App(App(ne, $1), $3) }
 	| LET idenList EQ exper IN exper	{ Let($2, $4, $6) }
-	| LET POLICY idenList EQ exper IN exper	{ Let($3, $5, $7) }
+	| LET POLICY idenList EQ exper IN exper	{ LetP($3, $5, $7) }
 	| IF exper THEN exper ELSE exper	{ App(App(App(branch, $2), $4), $6) }
 ;
 

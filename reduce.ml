@@ -1,7 +1,7 @@
 open Syntax;;
 
 type env = (string * value) list
-and value = | Closure of var * expr * env | Constant of constant * value list | LabelValue of value * expr list;; (* label *)
+and value = | Closure of var * expr * color * env | Constant of constant * value list | LabelValue of value * expr list;; (* label *)
 
 exception AnswerError of string
 type answer = Value of value;;
@@ -15,7 +15,7 @@ let val_bool u =
 
 let rec extractLab v =			(* label *)
 	match v with			(* label *)
-	 Closure (_, _, _) -> []	(* label *)
+	 Closure (_, _, _, _) -> []	(* label *)
 	| Constant (_, _) -> []		(* label *)
 	| LabelValue(va, el) -> 	(* label *)
 		(extractLab va) @ el;;	(* label *)
@@ -35,7 +35,7 @@ let val_addLab v lab =										(* label *)
 			Value v									(* label *)
 		else										(* label *)
 			begin match v with							(* label *)
-			 Closure (var, exp, env) ->						(* label *)
+			 Closure (var, exp, c, env) ->						(* label *)
 				Value(LabelValue(v,(lab::[])))					(* label *)
 			| Constant (c, vl) ->							(* label *)
 				Value(LabelValue(v,(lab::[])))					(* label *)
@@ -49,7 +49,7 @@ let val_addLab v lab =										(* label *)
 
 let val_remLab v =								(* label *)
 	match v with								(* label *)
-	 Closure (_, _, _) ->							(* label *)
+	 Closure (_, _, _, _) ->							(* label *)
 		Value v								(* label *)
 	| Constant (_, _) ->							(* label *)
 		Value v								(* label *)
@@ -64,7 +64,7 @@ let val_remLab v =								(* label *)
 
 let val_getLab v =										(* label *)
 	match v with										(* label *)
-	  Closure (_, _, _) ->									(* label *)
+	  Closure (_, _, _, _) ->									(* label *)
 		Value (Constant ({name = Lab "noLab"; arity = 0; constr = false}, []))	(* label *)
 	| Constant (_, _) ->									(* label *)
 		Value (Constant ({name = Lab "noLab"; arity = 0; constr = false}, []))	(* label *)
@@ -143,18 +143,18 @@ let get x env =
 let rec eval env color = function
 	| Var x -> get x env
 	| Const c -> Value (Constant (c, []))
-	| Fun (x, a) -> Value (Closure (x, a, env))
+	| Fun (x, a) -> Value (Closure (x, a, color, env))
 	| Let (x, a1, a2) ->
-		let body = create_lam_expr (List.tl x) a1 in
-		begin match eval env color body with
+		let funcBody = create_lam_expr (List.tl x) a1 in
+		begin match eval env color funcBody with
 		| Value v1 ->
 			let newEnv = (List.hd x, v1)::env in
 			eval newEnv color a2
 		| _ -> raise (AnswerError "In eval: function definition in let is not a value!")
 		end
 	| LetP (x, a1, a2) ->
-		let body = create_lam_expr (List.tl x) a1 in
-		begin match eval env "policy" body with
+		let funcBody = create_lam_expr (List.tl x) a1 in
+		begin match eval env "policy" funcBody with
 		| Value v1 ->
 			let newEnv = (List.hd x, v1)::env in
 			eval newEnv color a2
@@ -170,8 +170,8 @@ let rec eval env color = function
 				else if c.arity > k then Value (Constant (c, v2::l))
 				else if c.constr then Value (Constant (c, v2::l))
 				else delta c (v2::l) color
-			| Closure (x, e, env0), Value v2 ->
-				eval ((x, v2) :: env0) color e
+			| Closure (x, e, c, env0), Value v2 ->
+				eval ((x, v2) :: env0) c e
 			| LabelValue (_, _), _ ->
 				raise (AnswerError "In eval: label value can't be applied!")
 			| _, _ ->

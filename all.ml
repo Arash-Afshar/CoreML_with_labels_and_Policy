@@ -37,7 +37,7 @@ let print_answer = function
 					| Int i -> print_string(string_of_int i ^ "\n")
 					| _ -> print_string("Not name!\n")
 				)
-			| Closure (var, ex, env) -> print_string("lambda exp!\n")
+			| Closure (var, ex, color, env) -> print_string("lambda exp!\n")
 		)
 	| _ -> print_string("Not value!\n");;
 
