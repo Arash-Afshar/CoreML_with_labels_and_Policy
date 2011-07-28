@@ -1,23 +1,8 @@
 open Syntax;;
 open Reduce;;
-open Poly;;
-open Unify;;
-
-(* =============================================== print type =============================================== *)
-
-let rec string_of_texp t= 
-	let t =repr t in
-	match desc t with
-	  Tvar var -> "x"^string_of_int(var)
-	| Tcon (con, l) ->
-		begin match con, l with
-		  Tarrow , l -> "("^string_of_texp(List.hd(l))^" -> "^string_of_texp(List.hd(List.tl(l)))^")"
-		| Tint , l -> "int"
-		| Tbool , l -> "bool"
-		end		
-;;
-
-let print_type t = print_string (string_of_texp t);;
+(*open Poly;;
+open Unify;;*)
+open ConstraintPolyInfer;;
 
 (* =============================================== print abstract syntax =============================================== *)
 
@@ -148,5 +133,54 @@ let rec string_of_answer = function
 		"Not an answer!";;
 
 let print_answer a = print_string (string_of_answer a);;
+
+(* =============================================== print type =============================================== *)
+
+let rec string_of_short_texp t=
+	let t =repr t in
+	match desc t with
+	  Tvar var -> "a"^string_of_int(var)
+	| Tcon (symb, l) -> 
+		begin match symb, l with
+		  Tint, _ -> "int"
+		| Tbool, _ -> "bool"
+		| Tlab, _ -> "lab"
+		| Tarrow , l -> "("^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^")"
+		end
+	| Tlabled (t, e) ->
+		let e = erepr e in
+		begin match edesc e with
+		  Evar var -> (string_of_short_texp t)^"{"^("x"^string_of_int var)^"}"
+		| Econ e   -> (string_of_short_texp t)^"{"^(string_of_concrete_expr e)^"}"
+		end
+	| _ -> "Not an texp!"
+;;
+
+let print_type t = print_string (string_of_short_texp t);;
+
+(* =============================================== print constraint set =============================================== *)
+
+let rec string_of_constraint c =
+	match c with
+	  { texp_node = Desc (Tvar var);   mark = 0 } -> "a"^string_of_int(var)
+	| { texp_node = Desc (Tcon (symb, l));   mark = 0 } -> 
+		begin match symb, l with
+		  Tint, _ -> "int"
+		| Tbool, _ -> "bool"
+		| Tlab, _ -> "lab"
+		| Tarrow , l -> "("^string_of_constraint(List.hd(l))^" -> "^string_of_constraint(List.hd(List.tl(l)))^")"
+		end
+	| { texp_node = Desc (Tlabled (t, e));   mark = 0 } ->
+		let e = erepr e in
+		begin match edesc e with
+		  Evar var -> (string_of_constraint t)^"{"^("x"^string_of_int var)^"}"
+		| Econ e   -> (string_of_constraint t)^"{"^(string_of_concrete_expr e)^"}"
+		end
+	| { texp_node = Link u;   mark = 0 } ->
+		"===>["^(string_of_constraint u)^"]"
+	| _ -> "Not an texp!"
+;;
+
+let print_constraint_set c = List.map print_string (List.map string_of_constraint c);;
 
 

@@ -1,9 +1,18 @@
 open PrettyPrinter;;
 open Syntax;;
 open Reduce;;
-open Poly;;
-open Unify;;
+open ConstraintPolyInfer;;
+(*open Poly;;
+open Unify;;*)
 
+
+let c = [] in
+let e = {name = Name "addLab"; arity = 2; constr = false} in
+let t, cs = type_of_const e c in
+	print_type t; print_newline();
+	print_constraint_set cs; print_newline();;
+
+(*
 let _ =
 	try
 		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
@@ -11,14 +20,14 @@ let _ =
 			let result = Parser.main Lexer.token lexbuf in
 			print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();
 			print_string("abstract syntax of expression="); print_newline(); print_abstract_expr(result); print_newline(); print_newline();
-			print_string("type of expression="); print_newline(); print_type(type_of result); print_newline(); print_newline();
+			(*print_string("type of expression="); print_newline(); print_type(type_of result); print_newline(); print_newline(); *)
 			print_string("value of expression="); print_newline(); print_answer(eval [] "code" result); print_newline(); print_newline();
 			flush stdout
 		done
 	with Lexer.Eof ->
 		exit 0;;
 
-
+*)
 
 
 
