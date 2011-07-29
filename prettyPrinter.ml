@@ -2,7 +2,7 @@ open Syntax;;
 open Reduce;;
 (*open Poly;;
 open Unify;;*)
-open ConstraintPolyInfer;;
+open InferDefs;;
 
 (* =============================================== print abstract syntax =============================================== *)
 
@@ -24,7 +24,7 @@ let rec string_of_abstract_expr = function
 	  Var v ->
 		"Var \""^v^"\""
 	| Const c ->
-		"Const { name = "^(string_of_abstract_name c.name)^"; constr = "^(string_of_bool c.constr)^"; arity = "^(string_of_int c.arity)^"}"
+"Const { name = "^(string_of_abstract_name c.name)^"; constr = "^(string_of_bool c.constr)^"; arity = "^(string_of_int c.arity)^"}"
 	| Fun (v, e) ->
 		"Fun (\""^v^"\" , "^string_of_abstract_expr(e)^")"
 	| App (e1, e2) ->
@@ -137,8 +137,7 @@ let print_answer a = print_string (string_of_answer a);;
 (* =============================================== print type =============================================== *)
 
 let rec string_of_short_texp t=
-	let t =repr t in
-	match desc t with
+	match tdesc (Tnode t) with
 	  Tvar var -> "a"^string_of_int(var)
 	| Tcon (symb, l) -> 
 		begin match symb, l with
@@ -148,8 +147,7 @@ let rec string_of_short_texp t=
 		| Tarrow , l -> "("^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^")"
 		end
 	| Tlabled (t, e) ->
-		let e = erepr e in
-		begin match edesc e with
+		begin match edesc (Enode e) with
 		  Evar var -> (string_of_short_texp t)^"{"^("x"^string_of_int var)^"}"
 		| Econ e   -> (string_of_short_texp t)^"{"^(string_of_concrete_expr e)^"}"
 		end
@@ -162,25 +160,44 @@ let print_type t = print_string (string_of_short_texp t);;
 
 let rec string_of_constraint c =
 	match c with
-	  { texp_node = Desc (Tvar var);   mark = 0 } -> "a"^string_of_int(var)
-	| { texp_node = Desc (Tcon (symb, l));   mark = 0 } -> 
+	  { texp_node = Tvar var; tlink_node = Tempty; tmark = 0 } -> 
+		begin match var with
+		  -1 -> ""
+		| _  -> "a"^string_of_int(var)
+		end
+	| { texp_node = Tcon (symb, l); tlink_node = Tempty; tmark = 0 } -> 
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
 		| Tlab, _ -> "lab"
-		| Tarrow , l -> "("^string_of_constraint(List.hd(l))^" -> "^string_of_constraint(List.hd(List.tl(l)))^")"
+		| Tarrow , l -> 
+			let t1 = List.hd(l) in
+			let t2 = List.hd(List.tl(l)) in
+				"("^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^")"
 		end
-	| { texp_node = Desc (Tlabled (t, e));   mark = 0 } ->
-		let e = erepr e in
-		begin match edesc e with
+	| { texp_node = Tlabled (t, e); tlink_node = Tempty; tmark = 0 } ->
+		begin match edesc (Enode e) with
 		  Evar var -> (string_of_constraint t)^"{"^("x"^string_of_int var)^"}"
 		| Econ e   -> (string_of_constraint t)^"{"^(string_of_concrete_expr e)^"}"
 		end
-	| { texp_node = Link u;   mark = 0 } ->
-		"===>["^(string_of_constraint u)^"]"
+	| { texp_node = d; tlink_node = Tnode u; tmark = 0 } ->
+		(string_of_constraint (texp d))^" = "^(string_of_constraint u)
 	| _ -> "Not an texp!"
 ;;
 
-let print_constraint_set c = List.map print_string (List.map string_of_constraint c);;
+let rec string_of_constraint_set cs =
+	match cs with
+	  Cempty  -> ""
+	| Cnode c -> 
+		(string_of_constraint c.cnstrnt)^", "^(string_of_constraint_set c.link)
+;;
+
+let print_constraint_set cs =
+	let res = (string_of_constraint_set cs) in
+	print_string ("[ "^(String.sub res 2 ((String.length res)-4) )^" ]");;
+	(*print_string res;;*)
+
+
+
 
 

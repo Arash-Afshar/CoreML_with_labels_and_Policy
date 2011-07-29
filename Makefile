@@ -14,6 +14,9 @@ typescheme.cmo:
 poly.cmo: unify.cmo
 	ocamlc -c poly.ml;
 
+inferDefs.cmo:
+	ocamlc -c inferDefs.ml;
+
 constUnify.cmo:
 	ocamlc -c constraintUnify.ml;
 
@@ -52,8 +55,8 @@ clean:
 #	ocamlc -g -o all syntax.cmo reduce.cmo unify.cmo typescheme.cmo prettyPrinter.cmo all.cmo
 
 
-compiler: syntax.cmo reduce.cmo constPoly.cmo prettyPrinter.cmo parser.cmi  lexer.cmo parser.cmo compiler.cmo
-	ocamlc -g -o compiler syntax.cmo reduce.cmo constraintPolyInfer.cmo prettyPrinter.cmo lexer.cmo parser.cmo compiler.cmo 
+compiler: syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constPoly.cmo parser.cmi  lexer.cmo parser.cmo compiler.cmo
+	ocamlc -g -o compiler syntax.cmo inferDefs.cmo reduce.cmo constraintPolyInfer.cmo prettyPrinter.cmo lexer.cmo parser.cmo compiler.cmo 
 
 all: body compiler
 	
