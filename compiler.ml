@@ -30,7 +30,8 @@ let _ =
 			(*print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();
 			print_string("abstract syntax of expression="); print_newline(); print_abstract_expr(result); print_newline(); print_newline();*)
 			print_string("constrints="); print_newline();  print_constraint_set (Cnode cs); print_newline(); print_newline();
-			print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarInCS cs cs; Cnode cs); print_newline(); print_newline();
+			(*print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEq cs cs; Cnode cs); print_newline(); print_newline();*)
+			print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEqAndDelSingle cs cs; Cnode cs); print_newline(); print_newline();
 			print_string("type of expression="); print_newline(); print_type t; print_newline(); print_newline();
 			(*print_string("value of expression="); print_newline(); print_answer(eval [] "code" result); print_newline(); print_newline();*)
 			flush stdout
