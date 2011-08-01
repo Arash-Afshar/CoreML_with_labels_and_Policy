@@ -173,5 +173,42 @@ let unifyVarAndDelEqAndDelSingle cs1 root =
 	delEqCS cs1;
 	let Cnode next = cs1.link in
 	delSingleInCS  next root;;
+
+let rec unifyTwoTE te1 te2 rootCS =
 	
+;;
+
+let rec unifyTE currentTE rootCS =
+	begin match currentTE.texp_node with
+		  Tvar var ->
+			-38
+		| Tcon (sym, l)->
+			begin match sym with
+				  Tarrow ->
+					unifyTE (List.hd l) rootCS; unifyTE (List.hd (List.tl l)) rootCS; -39
+				| _ ->
+					-40
+			end;
+		| Tlabled (t, e) ->
+			unifyTE t rootCS; -41
+		| _ -> -42
+	end;
+	begin match currentTE.tlink_node with
+		  Tempty -> -43
+		| Tnode node ->
+			unifyTwoTE (currentTE.texp_node) node rootCS; -44
+	end
+;;
+
+let rec unifyCS currentC rootCS =
+	unifyTE currentC.cnstrnt rootCS;
+	match currentC.link with
+	  Cnode node ->
+		unifyCS node rootCS
+	| Cempty -> -37
+;;
+
+
+
+
 
