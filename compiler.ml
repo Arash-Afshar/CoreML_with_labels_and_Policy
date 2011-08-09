@@ -32,11 +32,13 @@ let _ =
 			print_string("constrints="); print_newline();  print_constraint_set (Cnode cs); print_newline(); print_newline();
 			(*print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEq cs cs; Cnode cs); print_newline(); print_newline();
 			print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEqAndDelSingle cs cs; Cnode cs); print_newline(); print_newline();*)
-			print_string("constrints="); print_newline(); 
 			let ret1 = unifyCS cs cs [] in
 			let ret2 = applySubsCS ret1 cs in
-			print_constraint_set (Cnode cs);
-			print_newline(); print_newline();
+			print_string("substitutions="); print_newline(); print_subsSet ret1; print_newline();
+			print_string("reduced constraints="); print_newline(); print_constraint_set (Cnode cs); print_newline(); print_newline();
+			let _ = delEqCS cs in
+			(*let _ = delSingleInCS cs cs in *)
+			print_string("redundant deleted constrints="); print_newline();  print_constraint_set (Cnode cs); print_newline(); print_newline();
 			print_string("type of expression="); print_newline(); print_type t; print_newline(); print_newline();
 			(*print_string("value of expression="); print_newline(); print_answer(eval [] "code" result); print_newline(); print_newline();*)
 			flush stdout

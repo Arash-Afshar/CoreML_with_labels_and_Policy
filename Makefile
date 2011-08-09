@@ -56,7 +56,7 @@ clean:
 
 
 compiler: syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constPoly.cmo constUnify.cmo parser.cmi  lexer.cmo parser.cmo compiler.cmo
-	ocamlc -g -o compiler syntax.cmo inferDefs.cmo reduce.cmo constraintPolyInfer.cmo constraintUnify.cmo prettyPrinter.cmo lexer.cmo parser.cmo compiler.cmo 
+	ocamlc -g -o compiler syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constraintPolyInfer.cmo constraintUnify.cmo lexer.cmo parser.cmo compiler.cmo 
 
 all: body compiler
 	

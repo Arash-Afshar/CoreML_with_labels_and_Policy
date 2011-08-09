@@ -197,6 +197,13 @@ let print_constraint_set cs =
 	print_string ("[ "^(String.sub res 2 ((String.length res)-4) )^" ]");;
 	(*print_string res;;*)
 
+(* =============================================== print substitution set =============================================== *)
+
+let string_of_subs (te1, te2) =
+	"["^(string_of_short_texp (texp te1))^" ==> "^(string_of_short_texp (texp te2))^"]\n";;
+
+let print_subsSet sl =
+	List.map print_string (List.map string_of_subs sl);;
 
 
 

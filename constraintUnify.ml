@@ -1,4 +1,5 @@
 open InferDefs;;
+open PrettyPrinter;;
 
 (**
 (* fixme: check to see if these functions consider types in Tcon ... *)
@@ -352,15 +353,16 @@ let rec unifyTE currentTE rootCS subs =
 					subs
 			end;
 		| Tlabled (t, e) ->
-			unifyTE t rootCS subs; subs
+			let subs = unifyTE t rootCS subs in
+			subs
 		| _ -> subs
 	end
-	in
+	in 
 	begin match currentTE.tlink_node with
 		  Tempty -> subs
 		| Tnode node ->
 			let subs = unifyTwoTE (currentTE.texp_node) (node.texp_node) rootCS subs in
-			subs
+			 subs
 	end
 ;;
 
@@ -368,10 +370,154 @@ let rec unifyCS currentC rootCS subs =
 	let subs = unifyTE currentC.cnstrnt rootCS subs in
 	match currentC.link with
 	  Cnode node ->
-		unifyCS node rootCS subs; subs
+		let subs = unifyCS node rootCS subs in
+		subs
 	| Cempty -> subs
 ;;
 (* ======================================================= Unify ===================================================== *)
+
+
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* ++++++++++++++++++++++++++++++++++++++++++++++++++ Delete Redundant +++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let rec isSingleTE te =
+	match te.texp_node with
+		  Tvar var ->
+			(*print_string "The var "; print_int var;*)
+			begin match te.tlink_node with
+				  Tempty -> (*print_string " is single.";  print_newline();*) true
+				| _ -> (*print_string " is NOt single.";  print_newline();*) false
+			end
+		| Tcon (sym, l) ->
+			begin match sym with
+			  Tarrow ->
+				let ret1 = isSingleTE (List.hd l) and ret2 = isSingleTE (List.hd (List.tl l)) in
+					if ( ret1 & ret2) then
+						true
+					else
+						false
+			| _ ->
+				begin match te.tlink_node with
+					  Tempty -> true
+					| _ -> false
+				end
+			end
+		| Tlabled (t, e) ->
+			isSingleTE t;
+;;
+
+let rec delSingleInCS currentC parentC =
+	match currentC.link with
+		  Cnode nextC ->
+			if (isSingleTE currentC.cnstrnt) then
+				begin
+					parentC.link <- currentC.link;
+					begin match parentC.link with
+						  Cnode newNextC ->
+							delSingleInCS newNextC parentC
+						| Cempty -> -36
+					end
+				end
+			else
+				delSingleInCS nextC currentC
+		| Cempty ->
+			if (isSingleTE currentC.cnstrnt) then
+				begin parentC.link <- Cempty; -35 end
+			else
+				-34
+;;
+
+
+let nextInt txp =
+	match txp.tlink_node with
+	  Tnode node ->
+		begin match node.texp_node with
+		  Tcon (Tint, _) -> true
+		| _ -> false
+		end
+	| Tempty -> false
+;;
+
+let nextBool txp =
+	match txp.tlink_node with
+	  Tnode node ->
+		begin match node.texp_node with
+		  Tcon (Tbool, _) -> true
+		| _ -> false
+		end
+	| Tempty -> false
+;;
+
+let nextVar txp =
+	match txp.tlink_node with
+	  Tnode node ->
+		begin match node.texp_node with
+		  Tvar var -> var
+		| _ -> -1 (* not a var *)
+		end
+	| Tempty -> -2 (* end of equation *)
+;;
+
+let rec delEqTE te =
+	begin match te.texp_node with
+	  Tvar var0 ->
+		begin match te.tlink_node with
+			  Tnode nextTnode ->
+				let var1 = (nextVar te) in
+					if (var0 == var1) then
+						begin te.tlink_node <- nextTnode.tlink_node; -3 end
+					else
+						-4
+			| Tempty ->
+				-5
+		end
+	| Tcon (sym, l)->
+		begin match sym with
+			  Tarrow ->
+				delEqTE (List.hd l); delEqTE (List.hd (List.tl l)); -6
+			| Tint ->
+				begin match te.tlink_node with
+					  Tnode nextTnode ->
+						if (nextInt te) then
+							begin te.tlink_node <- nextTnode.tlink_node; -14 end
+						else
+							-12
+					| Tempty ->
+						-13
+				end
+			| Tbool ->
+				begin match te.tlink_node with
+					  Tnode nextTnode ->
+						if (nextBool te) then
+							begin te.tlink_node <- nextTnode.tlink_node; -14 end
+						else
+							-12
+					| Tempty ->
+						-13
+				end
+			| Tlab ->
+				-100 (* fixme: lab should contain the expression *)
+			| _ -> -7
+		end
+	| Tlabled (t, e) ->
+		delEqTE t; -8
+	| _ -> -9
+	end;
+	begin match te.tlink_node with
+	  Tnode node ->
+		delEqTE node; -10
+	| Tempty -> -11
+	end
+;;
+
+let rec delEqCS csNode =
+	delEqTE csNode.cnstrnt;
+	match csNode.link with
+		  Cnode node ->
+			delEqCS node; -12
+		| Cempty -> -13
+;;
+(* ================================================== Delete Redundant =============================================== *)
 
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
@@ -400,11 +546,16 @@ let rec applySubs (te1, te2) csNode =
 ;;
 
 let rec applySubsCS subsSet csNode =
-	applySubs (List.hd subsSet) (csnode csNode.cnstrnt);
-	match csNode.link with
-		  Cnode node ->
-			applySubsCS [List.hd subsSet] node; -22
-		| Cempty -> -23
+	match subsSet with
+		  [] -> -24
+		| _  ->
+			begin
+			applySubs (List.hd subsSet) csNode;
+			match csNode.link with
+				  Cnode node ->
+					applySubsCS (List.tl subsSet) csNode; -22
+				| Cempty -> -23
+			end
 ;;
 (* ================================================== apply substitute =============================================== *)
 
