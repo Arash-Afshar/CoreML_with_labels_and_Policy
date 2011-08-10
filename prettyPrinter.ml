@@ -189,7 +189,7 @@ let rec string_of_constraint_set cs =
 	match cs with
 	  Cempty  -> ""
 	| Cnode c -> 
-		(string_of_constraint c.cnstrnt)^", "^(string_of_constraint_set c.link)
+		(string_of_constraint c.cnstrnt)^", \n"^(string_of_constraint_set c.link)
 ;;
 
 let print_constraint_set cs =

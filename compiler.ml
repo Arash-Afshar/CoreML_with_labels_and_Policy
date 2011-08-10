@@ -37,6 +37,7 @@ let _ =
 			print_string("substitutions="); print_newline(); print_subsSet ret1; print_newline();
 			print_string("reduced constraints="); print_newline(); print_constraint_set (Cnode cs); print_newline(); print_newline();
 			let _ = delEqCS cs in
+			let _ = delSingleInCS cs cs in
 			(*let _ = delSingleInCS cs cs in *)
 			print_string("redundant deleted constrints="); print_newline();  print_constraint_set (Cnode cs); print_newline(); print_newline();
 			print_string("type of expression="); print_newline(); print_type t; print_newline(); print_newline();

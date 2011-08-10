@@ -380,30 +380,102 @@ let rec unifyCS currentC rootCS subs =
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++ Delete Redundant +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let areExpEqual e1 e2 = true;;
+
+let areTvarsEqual (Tvar tv1) (Tvar tv2) =
+	if (tv1 == tv2) then
+		true
+	else
+		false
+;;
+
+let rec areTarrowsEqual (Tcon (Tarrow, [arg11; arg12])) (Tcon (Tarrow, [arg21; arg22])) =
+	let firstArg  = areTexpEqual arg11.texp_node arg21.texp_node in
+	let secondArg = areTexpEqual arg12.texp_node arg22.texp_node in
+		firstArg & secondArg
+
+and
+
+areTexpEqual te1 te2 =
+	match te1, te2 with
+		  Tvar var1, Tvar var2 ->
+			areTvarsEqual te1 te2
+		| Tcon (Tarrow, _), Tcon (Tarrow, _) ->
+			areTarrowsEqual te1 te2
+		| Tcon (Tint, _), Tcon (Tint, _) -> true
+		| Tcon (Tbool, _), Tcon (Tbool, _) -> true
+		| Tcon (Tlab, _), Tcon (Tlab, _) -> true (* fixme *)
+		| Tlabled (t1, e1), Tlabled (t2, e2) ->
+			let t = areTexpEqual t1.texp_node t2.texp_node in
+			let e = areExpEqual e1 e2 in
+				t & e
+		| _ -> false
+;;
+
+let rec delEqTE (Tnode te) =
+	match te.tlink_node with
+	  Tnode nextTnode ->
+		if (areTexpEqual te.texp_node nextTnode.texp_node) then
+			begin
+				te.tlink_node <- nextTnode.tlink_node;
+				delEqTE (Tnode te);
+				-3
+			end
+		else
+			delEqTE te.tlink_node
+	| Tempty ->
+		-3
+;;
+
+
+let rec delEqCS csNode =
+	delEqTE (Tnode csNode.cnstrnt);
+	match csNode.link with
+		  Cnode node ->
+			delEqCS node; -12
+		| Cempty -> -13
+;;
+
+
+
+
+
+
+
+
 let rec isSingleTE te =
 	match te.texp_node with
-		  Tvar var ->
-			(*print_string "The var "; print_int var;*)
-			begin match te.tlink_node with
-				  Tempty -> (*print_string " is single.";  print_newline();*) true
-				| _ -> (*print_string " is NOt single.";  print_newline();*) false
-			end
-		| Tcon (sym, l) ->
-			begin match sym with
-			  Tarrow ->
+		  Tcon (Tarrow, l) ->
+			let inner =
 				let ret1 = isSingleTE (List.hd l) and ret2 = isSingleTE (List.hd (List.tl l)) in
 					if ( ret1 & ret2) then
 						true
 					else
 						false
-			| _ ->
-				begin match te.tlink_node with
-					  Tempty -> true
-					| _ -> false
-				end
-			end
+			in
+			begin match te.tlink_node with
+				  Tempty ->
+					if inner then
+						true
+					else
+						false
+				| _ -> false
+			end;
 		| Tlabled (t, e) ->
-			isSingleTE t;
+			let inner = isSingleTE t in
+			begin match te.tlink_node with
+				  Tempty ->
+					if inner then
+						true
+					else
+						false
+				| _ -> false
+			end;
+		| _ ->
+			begin match te.tlink_node with
+				  Tempty -> true
+				| _ -> false
+			end
 ;;
 
 let rec delSingleInCS currentC parentC =
@@ -428,95 +500,7 @@ let rec delSingleInCS currentC parentC =
 ;;
 
 
-let nextInt txp =
-	match txp.tlink_node with
-	  Tnode node ->
-		begin match node.texp_node with
-		  Tcon (Tint, _) -> true
-		| _ -> false
-		end
-	| Tempty -> false
-;;
 
-let nextBool txp =
-	match txp.tlink_node with
-	  Tnode node ->
-		begin match node.texp_node with
-		  Tcon (Tbool, _) -> true
-		| _ -> false
-		end
-	| Tempty -> false
-;;
-
-let nextVar txp =
-	match txp.tlink_node with
-	  Tnode node ->
-		begin match node.texp_node with
-		  Tvar var -> var
-		| _ -> -1 (* not a var *)
-		end
-	| Tempty -> -2 (* end of equation *)
-;;
-
-let rec delEqTE te =
-	begin match te.texp_node with
-	  Tvar var0 ->
-		begin match te.tlink_node with
-			  Tnode nextTnode ->
-				let var1 = (nextVar te) in
-					if (var0 == var1) then
-						begin te.tlink_node <- nextTnode.tlink_node; -3 end
-					else
-						-4
-			| Tempty ->
-				-5
-		end
-	| Tcon (sym, l)->
-		begin match sym with
-			  Tarrow ->
-				delEqTE (List.hd l); delEqTE (List.hd (List.tl l)); -6
-			| Tint ->
-				begin match te.tlink_node with
-					  Tnode nextTnode ->
-						if (nextInt te) then
-							begin te.tlink_node <- nextTnode.tlink_node; -14 end
-						else
-							-12
-					| Tempty ->
-						-13
-				end
-			| Tbool ->
-				begin match te.tlink_node with
-					  Tnode nextTnode ->
-						if (nextBool te) then
-							begin te.tlink_node <- nextTnode.tlink_node; -14 end
-						else
-							-12
-					| Tempty ->
-						-13
-				end
-			| Tlab ->
-				-100 (* fixme: lab should contain the expression *)
-			| _ -> -7
-		end
-	| Tlabled (t, e) ->
-		delEqTE t; -8
-	| _ -> -9
-	end;
-	begin match te.tlink_node with
-	  Tnode node ->
-		delEqTE node; -10
-	| Tempty -> -11
-	end
-;;
-
-let rec delEqCS csNode =
-	delEqTE csNode.cnstrnt;
-	match csNode.link with
-		  Cnode node ->
-			delEqCS node; -12
-		| Cempty -> -13
-;;
 (* ================================================== Delete Redundant =============================================== *)
 
 
