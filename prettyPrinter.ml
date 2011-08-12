@@ -156,6 +156,18 @@ let rec string_of_short_texp t=
 
 let print_type t = print_string (string_of_short_texp t);;
 
+(* =============================================== print expression type =============================================== *)
+(*
+let rec string_of_expTypePair etPair =
+	match etPair with
+	  ETempty     -> ""
+	| ETnode node ->
+		"("^(string_of_concrete_expr (node.etExp))^") : "^(string_of_short_texp node.etType)^"\n";
+		string_of_expTypePair (node.etLink)
+;;
+
+let print_expType et = print_string ("["^(string_of_expTypePair et)^"]")
+*)
 (* =============================================== print constraint set =============================================== *)
 
 let rec string_of_constraint c =

@@ -1,2 +1,11 @@
-let policy a b c = (b + c)  in (a 1) 2
+let policy addLabel lab exp =
+	(addLab lab) exp in
+	let policy lift a =
+		if ((getLab a)==low) then
+			(addLab high) remLab a
+		else
+			a
+
+		in
+		lift ((lambda x.x) (addLabel low)) 1
 ;;

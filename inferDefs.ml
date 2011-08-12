@@ -12,6 +12,14 @@ and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabled  of tttt
 let eexp e = { eexp_node = e; elink_node = Eempty; emark = 0 };;
 let texp d = { texp_node = d; tlink_node = Tempty; tmark = 0 };;
 
+type expTypePairNode = { mutable etExp : expr; mutable etType: ttttnode; mutable etLink: expTypePair}
+and expTypePair = ETempty | ETnode of expTypePairNode;;
+
+(*
+let expTypePair e t     = {etExp = e; etType = t; etLink = ETempty};;
+let initExpTypePair = {etExp = Var "NAN"; etType = texp (Tvar (-1)); etLink = ETempty};;
+*)
+
 type scheme = texp list * texp;;
 
 let count = ref  0

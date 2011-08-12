@@ -8,7 +8,8 @@ open InferDefs;;
 exception Undefined_constant of string
 let type_of_const c t setC =
 let int3 = tarrow tint (tarrow tint tint) in
-	let bool3 = tarrow tbool (tarrow tbool tbool) in
+	let param = tvar() in
+	let bool3 = tarrow param (tarrow param tbool) in
 	match c.name  with
 	| Int _ -> link t tint; addC t setC
 	| Bool _ -> link t tbool; addC t setC
@@ -59,7 +60,16 @@ let extend tenv (x, t) = (x, t)::tenv;;
 
 (* =================================== poly infer ================================== *)
 
-let rec constraintGen tenv e t setC =
+let rec create_lam_expr varList expr =
+	if (List.length varList) == 1 then
+		Fun (List.hd varList, expr)
+	else
+		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
+
+
+let rec constraintGen tenv e t setC (*(ETnode expType)*) =
+	(print_concrete_expr e); print_string(" : "); (print_type t); print_newline();
+	(*expType.etLink <- ETnode (expTypePair e t);*)
 	match e with
 	| Var x -> type_of_var tenv x t setC
 	| Const c -> type_of_const c t setC
@@ -73,17 +83,19 @@ let rec constraintGen tenv e t setC =
 		let setC2 = constraintGen tenv e2 te2 setC  in
 		link te1 (tarrow te2 t); addC te1 setC
 	| Let (x, e1, e2) ->
-		let targ = tvar() and te1 = tvar() and te2 = tvar() in
-		constraintGen tenv e1 te1 setC;
-		constraintGen (extend tenv (List.hd x, targ)) e2 te2 setC;
-		link targ te1; link t te2; addC targ setC; addC t setC
+		let tfunc = tvar() and te1 = tvar() and te2 = tvar() in
+		let func = create_lam_expr (List.tl x) e1 in
+		constraintGen tenv func te1 setC;
+		constraintGen (extend tenv (List.hd x, tfunc)) e2 te2 setC;
+		link tfunc te1; link t te2; addC tfunc setC; addC t setC
 	| LetP (x, e1, e2) ->
-		let targ = tvar() and te1 = tvar() and te2 = tvar() in
-		constraintGen tenv e1 te1 setC;
-		constraintGen (extend tenv (List.hd x, targ)) e2 te2 setC;
-		link targ te1; link t te2; addC targ setC; addC t setC
+		let tfunc = tvar() and te1 = tvar() and te2 = tvar() in
+		let func = create_lam_expr (List.tl x) e1 in
+		constraintGen tenv func te1 setC;
+		constraintGen (extend tenv (List.hd x, tfunc)) e2 te2 setC;
+		link tfunc te1; link t te2; addC tfunc setC; addC t setC
 
-let genConstrSet e t cs = constraintGen [] e t cs;;
+let genConstrSet e t cs (*etPair*) = constraintGen [] e t cs (*etPair*);;
 
 
 (*

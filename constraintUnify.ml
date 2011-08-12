@@ -417,6 +417,14 @@ areTexpEqual te1 te2 =
 ;;
 
 let rec delEqTE (Tnode te) =
+	match te.texp_node with
+		  Tcon (Tarrow, [t1;t2])->
+			delEqTE (Tnode t1); delEqTE (Tnode t2);
+		| Tlabled (t, e) ->
+			(* fixme: delete equals in e*)
+			delEqTE (Tnode t);
+		| _ -> -1
+	;
 	match te.tlink_node with
 	  Tnode nextTnode ->
 		if (areTexpEqual te.texp_node nextTnode.texp_node) then

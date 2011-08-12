@@ -26,10 +26,12 @@ let _ =
 		while true do
 			let result = Parser.main Lexer.token lexbuf in
 			let t = tvar() and cs = csInit in
-			let _ = genConstrSet result t cs in
+			(*let etPair = (ETnode initExpTypePair) in*)
+			let _ = genConstrSet result t cs (*etPair*) in
 			(*print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();
 			print_string("abstract syntax of expression="); print_newline(); print_abstract_expr(result); print_newline(); print_newline();*)
 			print_string("constrints="); print_newline();  print_constraint_set (Cnode cs); print_newline(); print_newline();
+			(*print_string("expressions and types ="); print_newline();  print_expType (etPair); print_newline(); print_newline();*)
 			(*print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEq cs cs; Cnode cs); print_newline(); print_newline();
 			print_string("reduced constrints="); print_newline();  print_constraint_set (unifyVarAndDelEqAndDelSingle cs cs; Cnode cs); print_newline(); print_newline();*)
 			let _ = unifyCS1 cs cs in
