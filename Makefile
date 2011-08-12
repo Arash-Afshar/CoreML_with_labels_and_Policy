@@ -1,30 +1,30 @@
 # pre req
 syntax.cmo:
-	ocamlc -c syntax.ml;
+	ocamlc -g -c syntax.ml;
 
 reduce.cmo:
-	ocamlc -c reduce.ml;
+	ocamlc -g -c reduce.ml;
 
 unify.cmo:
-	ocamlc -c unify.ml;
+	ocamlc -g -c unify.ml;
 
 typescheme.cmo:
-	ocamlc -c typescheme.ml;
+	ocamlc -g -c typescheme.ml;
 
 poly.cmo: unify.cmo
-	ocamlc -c poly.ml;
+	ocamlc -g -c poly.ml;
 
 inferDefs.cmo:
-	ocamlc -c inferDefs.ml;
+	ocamlc -g -c inferDefs.ml;
 
 constUnify.cmo:
-	ocamlc -c constraintUnify.ml;
+	ocamlc -g -c constraintUnify.ml;
 
 constPoly.cmo: constUnify.cmo
-	ocamlc -c constraintPolyInfer.ml;
+	ocamlc -g -c constraintPolyInfer.ml;
 
 all.cmo:
-	ocamlc -c all.ml;
+	ocamlc -g -c all.ml;
 
 lexer.ml:
 	ocamllex lexer.mll
@@ -33,19 +33,19 @@ parser.ml:
 	ocamlyacc parser.mly
 
 parser.cmi: syntax.cmo parser.ml
-	ocamlc -c parser.mli syntax.cmo
+	ocamlc -g -c parser.mli syntax.cmo
 
 lexer.cmo: lexer.ml
-	ocamlc -c lexer.ml
+	ocamlc -g -c lexer.ml
 
 parser.cmo: parser.ml
-	ocamlc -c parser.ml
+	ocamlc -g -c parser.ml
 
 compiler.cmo:
-	ocamlc -c compiler.ml
+	ocamlc -g -c compiler.ml
 
 prettyPrinter.cmo:
-	ocamlc -c prettyPrinter.ml
+	ocamlc -g -c prettyPrinter.ml
 
 #main
 clean: 

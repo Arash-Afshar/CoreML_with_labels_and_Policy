@@ -10,7 +10,7 @@ let type_of_const c t setC =
 let int3 = tarrow tint (tarrow tint tint) in
 	let bool3 = tarrow tbool (tarrow tbool tbool) in
 	match c.name  with
-| Int _ -> link t tint; addC t setC
+	| Int _ -> link t tint; addC t setC
 	| Bool _ -> link t tbool; addC t setC
 	| Name ("+" | "-" | "*" | "/") -> link t int3; addC t setC
 	| Name (">" | "<" | "==" | "!=") -> link t bool3; addC t setC

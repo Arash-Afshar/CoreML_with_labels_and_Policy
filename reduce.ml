@@ -15,14 +15,14 @@ let val_bool u =
 
 let rec extractLab v =			(* label *)
 	match v with			(* label *)
-	 Closure (_, _, _, _) -> []	(* label *)
+	  Closure (_, _, _, _) -> []	(* label *)
 	| Constant (_, _) -> []		(* label *)
 	| LabelValue(va, el) -> 	(* label *)
 		(extractLab va) @ el;;	(* label *)
 
 let rec exctract_val v=			(* label *)
 	match v with			(* label *)
-	 LabelValue(va, el) ->		(* label *)
+	  LabelValue(va, el) ->		(* label *)
 		exctract_val va		(* label *)
 	| _ ->				(* label *)
 		v;;			(* label *)
@@ -30,7 +30,7 @@ let rec exctract_val v=			(* label *)
 
 let val_addLab v lab =										(* label *)
 	match lab with										(* label *)
-	 Const {name = Lab l; arity = 0; constr = false} ->					(* label *)
+	  Const {name = Lab l; arity = 0; constr = false} ->					(* label *)
 		if (String.compare l "noLab") == 0 then						(* label *)
 			Value v									(* label *)
 		else										(* label *)
@@ -49,7 +49,7 @@ let val_addLab v lab =										(* label *)
 
 let val_remLab v =								(* label *)
 	match v with								(* label *)
-	 Closure (_, _, _, _) ->							(* label *)
+	  Closure (_, _, _, _) ->							(* label *)
 		Value v								(* label *)
 	| Constant (_, _) ->							(* label *)
 		Value v								(* label *)
@@ -90,7 +90,7 @@ let rec create_lam_expr varList expr =
 
 let delta c l color=
 	match c.name, l with
-	| Name "+", [ Constant ({name=Int second}, []); Constant ({name=Int first}, [])] ->
+	  Name "+", [ Constant ({name=Int second}, []); Constant ({name=Int first}, [])] ->
 		val_int (first + second)
 	| Name "-", [ Constant ({name=Int second}, []); Constant ({name=Int first}, [])] ->
 		val_int (first - second)
@@ -141,7 +141,7 @@ let get x env =
 	try Value (List.assoc x env) with Not_found -> raise (AnswerError "In get: variable is not in the environment");;
 
 let rec eval env color = function
-	| Var x -> get x env
+	  Var x -> get x env
 	| Const c -> Value (Constant (c, []))
 	| Fun (x, a) -> Value (Closure (x, a, color, env))
 	| Let (x, a1, a2) ->
