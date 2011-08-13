@@ -143,13 +143,24 @@ let rec string_of_short_texp t=
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
-		| Tlab e, _ -> (string_of_concrete_expr e)
+		| Tlab e, _ ->
+			begin match e.eexp_node with
+				  Evar var ->
+					"x"^(string_of_int var)
+				| Econ e   ->
+					(string_of_concrete_expr e)
+			end
 		| Tarrow , l -> "( "^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^" )"
 		end
 	| Tlabled (t, e) ->
-		begin match edesc (Enode e) with
-		  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
-		| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
+		begin match e with
+			  Eempty     ->
+				string_of_short_texp t
+			| Enode node ->
+				begin match node.eexp_node with
+				  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
+				| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
+				end
 		end
 	| _ -> "Not an texp!"
 ;;
@@ -181,16 +192,27 @@ let rec string_of_constraint c =
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
-		| Tlab e, _ -> (string_of_concrete_expr e)
+		| Tlab e, _ ->
+			begin match e.eexp_node with
+				  Evar var ->
+					"x"^(string_of_int var)
+				| Econ e   ->
+					(string_of_concrete_expr e)
+			end
 		| Tarrow , l -> 
 			let t1 = List.hd(l) in
 			let t2 = List.hd(List.tl(l)) in
 				"( "^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^" )"
 		end
 	| { texp_node = Tlabled (t, e); tlink_node = Tempty; tmark = 0 } ->
-		begin match edesc (Enode e) with
-		  Evar var -> (string_of_constraint t)^"{ "^("x"^string_of_int var)^" }"
-		| Econ e   -> (string_of_constraint t)^"{ "^(string_of_concrete_expr e)^" }"
+		begin match e with
+			  Eempty     ->
+				string_of_short_texp t
+			| Enode node ->
+				begin match node.eexp_node with
+				  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
+				| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
+				end
 		end
 	| { texp_node = d; tlink_node = Tnode u; tmark = 0 } ->
 		(string_of_constraint (texp d))^" = "^(string_of_constraint u)

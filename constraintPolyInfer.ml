@@ -25,28 +25,31 @@ let int3 = tarrow tint (tarrow tint tint) in
 	| Name ("addLab") ->
 			let add =
 			let t1   = tvar() in
-			let e   = evar() in  (* fixme: how to say exp has type lab??? *)
-			let lab = tlab in
+			let eVar = evar() in  (* fixme: how to say exp has type lab??? *)
+			let e    = (Enode eVar) in  (* fixme: how to say exp has type lab??? *)
+			let lab  = tlab eVar in
 			let res=(tlabled t1 e) in
-			link t (tarrow (lab e) (tarrow t1 res)); addC t setC in (* fixme: Think about how to implemet expression substitution. You may need to change eeeeeeeNode definition *)
+			link t (tarrow lab (tarrow t1 res)); addC t setC in (* fixme: Think about how to implemet expression substitution. You may need to change eeeeeeeNode definition *)
 		add
 	| Name ("remLab") ->
 			let rem =
 			let t1  = tvar() in
-			let e   = evar() in
+			let e   = Enode (evar()) in
 			let t2   = tlabled t1 e in
 			link t (tarrow t2 t1); addC t setC in
 		rem
 	| Name ("getLab") ->
 			let get =
 			let t1  = tvar() in
-			let e   = evar() in
+			let eVar = evar() in  (* fixme: how to say exp has type lab??? *)
+			let e    = (Enode eVar) in  (* fixme: how to say exp has type lab??? *)
 			let t2  = tlabled t1 e in
-			link t (tarrow t2 tlab); addC t setC in
+			let lab = tlab eVar in
+			link t (tarrow t2 lab); addC t setC in
 		get
 	| Lab ("noLab") -> link t (tvar()); addC t setC
-	| Lab ("high") -> link t tlab; addC t setC
-	| Lab ("low") -> link t tlab; addC t setC
+	| Lab ("high") -> link t (tlab (eexp (Econ high))); addC t setC
+	| Lab ("low") -> link t (tlab (eexp (Econ low))); addC t setC
 	| Name n -> raise  (Undefined_constant n)
 	| Lab l -> raise  (Undefined_constant l);;
 

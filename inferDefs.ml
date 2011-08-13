@@ -4,10 +4,10 @@ type eeeenode = { mutable eexp_node : edesc; mutable elink_node : eexp; mutable 
 and eexp = Eempty | Enode of eeeenode
 and edesc = Evar  of int | Econ of expr;;
 
-type type_symbol = Tarrow | Tint | Tbool | Tlab of expr
+type type_symbol = Tarrow | Tint | Tbool | Tlab of eeeenode
 type ttttnode = { mutable  texp_node : tdesc; mutable tlink_node : texp; mutable  tmark : int }
 and texp = Tempty | Tnode of ttttnode
-and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabled  of ttttnode * eeeenode;;
+and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabled  of ttttnode * eexp;;
 
 let eexp e = { eexp_node = e; elink_node = Eempty; emark = 0 };;
 let texp d = { texp_node = d; tlink_node = Tempty; tmark = 0 };;
