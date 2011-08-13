@@ -56,6 +56,6 @@ exper:
 
 
 idenList:
-	  IDEN 					{ $1::[] }
+	  IDEN 					{ [$1] }
 	| IDEN idenList				{ $1::$2 }
 ;

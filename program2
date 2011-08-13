@@ -1,5 +1,5 @@
-let policy addLabel lab exp =
-	(addLab lab) exp in
+let policy b =
+	(addLab low) 1 in
 	let policy lift a =
 		if ((getLab a)==low) then
 			(addLab high) remLab a
@@ -7,5 +7,5 @@ let policy addLabel lab exp =
 			a
 
 		in
-		lift ((lambda x.x) (addLabel low)) 1
+		lift ((lambda x.x) b)
 ;;

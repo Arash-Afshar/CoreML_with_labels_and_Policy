@@ -61,7 +61,10 @@ let extend tenv (x, t) = (x, t)::tenv;;
 (* =================================== poly infer ================================== *)
 
 let rec create_lam_expr varList expr =
-	if (List.length varList) == 1 then
+	let length = (List.length varList) in
+	if (length == 0) then
+		expr
+	else if (length == 1) then
 		Fun (List.hd varList, expr)
 	else
 		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
