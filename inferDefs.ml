@@ -4,7 +4,7 @@ type eeeenode = { mutable eexp_node : edesc; mutable elink_node : eexp; mutable 
 and eexp = Eempty | Enode of eeeenode
 and edesc = Evar  of int | Econ of expr;;
 
-type type_symbol = Tarrow | Tint | Tbool | Tlab
+type type_symbol = Tarrow | Tint | Tbool | Tlab of expr
 type ttttnode = { mutable  texp_node : tdesc; mutable tlink_node : texp; mutable  tmark : int }
 and texp = Tempty | Tnode of ttttnode
 and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabled  of ttttnode * eeeenode;;
@@ -32,7 +32,7 @@ let tvar() = incr  count; texp (Tvar  !count);;
 
 let tint         = texp (Tcon (Tint,  []))
 let tbool        = texp (Tcon (Tbool, []))
-let tlab         = texp (Tcon (Tlab,  []))
+let tlab e       = texp (Tcon (Tlab e,  []))
 let tarrow t1 t2 = texp (Tcon (Tarrow, [t1; t2]))
 let tlabled t e  = texp (Tlabled (t, e));;
 

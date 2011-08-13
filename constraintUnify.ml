@@ -19,7 +19,7 @@ let rec unifyTwoTE te1 te2 subs =
 		subs;
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
 		subs;
-	| Tcon (Tlab, []), Tcon (Tlab, []) ->
+	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
 		subs;
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		let argUnify = unifyTwoTE t11.texp_node t21.texp_node subs in
@@ -177,7 +177,7 @@ areTexpEqual te1 te2 =
 			areTarrowsEqual te1 te2
 		| Tcon (Tint, _), Tcon (Tint, _) -> true
 		| Tcon (Tbool, _), Tcon (Tbool, _) -> true
-		| Tcon (Tlab, _), Tcon (Tlab, _) -> true (* fixme *)
+		| Tcon (Tlab _, _), Tcon (Tlab _, _) -> true (* fixme *)
 		| Tlabled (t1, e1), Tlabled (t2, e2) ->
 			let t = areTexpEqual t1.texp_node t2.texp_node in
 			let e = areExpEqual e1 e2 in
@@ -301,7 +301,8 @@ let rec applySubs (te1, te2) csNode =
 		-48
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
 		-49
-	| Tcon (Tlab, []), Tcon (Tlab, []) ->
+	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
+		(* fixme: expression substitution *)
 		-50
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		-51 (* fixme: error *)
@@ -436,7 +437,8 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		(Tvar (-1), Tvar (-1));
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
 		(Tvar (-1), Tvar (-1));
-	| Tcon (Tlab, []), Tcon (Tlab, []) ->
+	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
+		(* fixme: expression unification *)
 		(Tvar (-1), Tvar (-1));
 	| _ ->
 raise (UnunifyingConstraints ((string_of_short_texp (texp te1))^" != "^(string_of_short_texp (texp te2)))); (* fixme: Error should be implemented *)

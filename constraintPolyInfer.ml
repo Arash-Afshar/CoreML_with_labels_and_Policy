@@ -28,7 +28,7 @@ let int3 = tarrow tint (tarrow tint tint) in
 			let e   = evar() in  (* fixme: how to say exp has type lab??? *)
 			let lab = tlab in
 			let res=(tlabled t1 e) in
-			link t (tarrow lab (tarrow t1 res)); addC t setC in
+			link t (tarrow (lab e) (tarrow t1 res)); addC t setC in (* fixme: Think about how to implemet expression substitution. You may need to change eeeeeeeNode definition *)
 		add
 	| Name ("remLab") ->
 			let rem =

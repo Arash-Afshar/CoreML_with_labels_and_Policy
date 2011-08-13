@@ -143,7 +143,7 @@ let rec string_of_short_texp t=
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
-		| Tlab, _ -> "lab"
+		| Tlab e, _ -> (string_of_concrete_expr e)
 		| Tarrow , l -> "( "^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^" )"
 		end
 	| Tlabled (t, e) ->
@@ -181,7 +181,7 @@ let rec string_of_constraint c =
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
-		| Tlab, _ -> "lab"
+		| Tlab e, _ -> (string_of_concrete_expr e)
 		| Tarrow , l -> 
 			let t1 = List.hd(l) in
 			let t2 = List.hd(List.tl(l)) in
