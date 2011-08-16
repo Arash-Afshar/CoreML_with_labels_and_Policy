@@ -61,8 +61,6 @@ let type_of_var tenv x t setC =
 
 let extend tenv (x, t) = (x, t)::tenv;;
 
-(* =================================== poly infer ================================== *)
-
 let rec create_lam_expr varList expr =
 	let length = (List.length varList) in
 	if (length == 0) then
@@ -72,6 +70,7 @@ let rec create_lam_expr varList expr =
 	else
 		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
 
+(* =================================== poly infer ================================== *)
 
 let rec constraintGen tenv e t setC (*(ETnode expType)*) =
 	(print_concrete_expr e); print_string(" : "); (print_type t); print_newline();
@@ -104,27 +103,3 @@ let rec constraintGen tenv e t setC (*(ETnode expType)*) =
 let genConstrSet e t cs (*etPair*) = constraintGen [] e t cs (*etPair*);;
 
 
-(*
-let constraintGen e setC = 
-	match e with
-	| Var x -> unify (type_instance (type_of_var tenv  x)) t
-	| Const c -> unify (type_instance (type_of_const c)) t
-	| Fun (x, a) ->
-		let  tv1 = tvar() and  tv2 = tvar() in
-		infer (extend tenv  (x, ([], tv1))) a  tv2;
-		unify t (tarrow  tv1 tv2)
-	| App (a1, a2) ->
-		let  tv = tvar() in
-		infer tenv a1  (tarrow tv t);
-		infer tenv a2  tv
-	| Let (x, a1, a2) ->
-		let  tv = tvar() in
-		infer tenv a1  tv;
-		let  s = generalizable tenv tv, tv in
-		infer (extend tenv (List.hd x, s)) a2  t
-	| LetP (x, a1, a2) ->
-		let  tv = tvar() in
-		infer tenv a1  tv;
-		let  s = generalizable tenv tv, tv in
-		infer (extend tenv (List.hd x, s)) a2  t;;
-*)

@@ -1,83 +1,28 @@
 open InferDefs;;
 open PrettyPrinter;;
-
-
-let rec unifyTwoE e1 e2 subs = [];;
-
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++ Unify +++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let rec unifyTwoTE te1 te2 subs =
-	match te1, te2 with
-	  Tvar var1, Tvar var2 ->
-		(te1, te2)::subs;
-	| Tvar var, desc ->
-		(te1, te2)::subs;
-	| desc, Tvar var ->
-		(te2, te1)::subs;
-	| Tcon (Tint, []), Tcon (Tint, []) ->
-		subs;
-	| Tcon (Tbool, []), Tcon (Tbool, []) ->
-		subs;
-	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
-		subs;
-	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
-		let argUnify = unifyTwoTE t11.texp_node t21.texp_node subs in
-		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
-		let resUnify = unifyTwoTE t21.texp_node t22.texp_node subs in
-		argUnify@resUnify@subs;
-	| Tlabled (t1, e1), Tlabled (t2, e2) ->
-		let typeUnify = unifyTwoTE t1.texp_node t2.texp_node subs in
-		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
-		let labUnify = unifyTwoE e1 e2 subs in
-		typeUnify@labUnify@subs;
-	| _ ->
-		subs; (* fixme: Error should be implemented *)
-;;
-
-let rec unifyTE currentTE subs =
-	let subs =
-	begin match currentTE.texp_node with
-		  Tvar var ->
-			subs
-		| Tcon (Tarrow, l)->
-			let subs = unifyTE (List.hd l) subs in
-			let subs = unifyTE (List.hd (List.tl l)) subs in
-			subs
-		| Tlabled (t, e) ->
-			let subs = unifyTE t subs in (* fixme: we should also unify the types in e *)
-			subs
-		| _ -> subs
-	end
-	in
-	begin match currentTE.tlink_node with
-		  Tempty -> subs
-		| Tnode nextTnode ->
-			let subs = unifyTwoTE (currentTE.texp_node) (nextTnode.texp_node) subs in
-			begin match nextTnode.tlink_node with
-				  Tempty -> subs
-				| Tnode _ ->
-					unifyTE nextTnode subs
-			end
-	end
-;;
-
-
-
-let rec unifyCS currentC rootCS subs =
-	let subs = unifyTE currentC.cnstrnt subs in
-	match currentC.link with
-	  Cnode node ->
-		let subs = unifyCS node rootCS subs in
-		subs
-	| Cempty -> subs
-;;
-(* ======================================================= Unify ===================================================== *)
-
+open Syntax;;
 
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* ++++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with Var ++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++ Unify Expressions +++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let rec unifyTwoE e1 e2 subs =
+	match e1, e2 with
+	  Var v1, Var v2 -> 1
+	| Var v, exp -> 1
+	| exp, Var v -> 1
+	| Fun(v1, e1), Fun(v2, e2) -> 1
+	| App(e1, e2), App(e3, e4) -> 1
+	| Let(vl1, e1, e2), Let(vl2, e3, e4) -> 1
+	| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> 1
+	| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> 1
+	| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> 1
+;;
+(* ================================================= Unify Expressions ============================================== *)
+
+
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with Var +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 let rec subsVarVar (tv1, tv2) te =
 	begin match te.texp_node with
@@ -327,7 +272,7 @@ let rec applySubsCS subsSet csNode =
 (* ================================================== apply substitute =============================================== *)
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++ New Unify +++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* ++++++++++++++++++++++++++++++++++++++++++++++++++++ Unify Types ++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (*
 Func4: cleanUp functions
@@ -441,7 +386,7 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		(* fixme: expression unification *)
 		(Tvar (-1), Tvar (-1));
 	| _ ->
-raise (UnunifyingConstraints ((string_of_short_texp (texp te1))^" != "^(string_of_short_texp (texp te2)))); (* fixme: Error should be implemented *)
+		raise (UnunifyingConstraints ((string_of_short_texp (texp te1))^" != "^(string_of_short_texp (texp te2)))); (* fixme: Error should be implemented *)
 and
 unifyTE1 currentTE rootCS =
 	match currentTE with
@@ -464,8 +409,12 @@ unifyTE1 currentTE rootCS =
 			end
 			
 ;;
+(* ==================================================== Unify Types ================================================== *)
 
 
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++ Unify Constraints +++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 let rec unifyCS1 currentC rootCS =
 	let subs = unifyTE1 (Tnode currentC.cnstrnt) rootCS in
 	match currentC.link with
@@ -474,7 +423,20 @@ let rec unifyCS1 currentC rootCS =
 	| Cempty -> -6
 ;;
 
-(* ===================================================== New Unify =================================================== *)
+(* ================================================= Unify Constraints =============================================== *)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -704,6 +666,78 @@ let rec unifyCS currentC rootCS =
 		unifyCS node rootCS
 	| Cempty -> -37
 ;;
+
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++ Unify +++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let rec unifyTwoTE te1 te2 subs =
+	match te1, te2 with
+	  Tvar var1, Tvar var2 ->
+		(te1, te2)::subs;
+	| Tvar var, desc ->
+		(te1, te2)::subs;
+	| desc, Tvar var ->
+		(te2, te1)::subs;
+	| Tcon (Tint, []), Tcon (Tint, []) ->
+		subs;
+	| Tcon (Tbool, []), Tcon (Tbool, []) ->
+		subs;
+	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
+		subs;
+	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
+		let argUnify = unifyTwoTE t11.texp_node t21.texp_node subs in
+		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
+		let resUnify = unifyTwoTE t21.texp_node t22.texp_node subs in
+		argUnify@resUnify@subs;
+	| Tlabled (t1, e1), Tlabled (t2, e2) ->
+		let typeUnify = unifyTwoTE t1.texp_node t2.texp_node subs in
+		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
+		let labUnify = unifyTwoE e1 e2 subs in
+		typeUnify@labUnify@subs;
+	| _ ->
+		subs; (* fixme: Error should be implemented *)
+;;
+
+let rec unifyTE currentTE subs =
+	let subs =
+	begin match currentTE.texp_node with
+		  Tvar var ->
+			subs
+		| Tcon (Tarrow, l)->
+			let subs = unifyTE (List.hd l) subs in
+			let subs = unifyTE (List.hd (List.tl l)) subs in
+			subs
+		| Tlabled (t, e) ->
+			let subs = unifyTE t subs in (* fixme: we should also unify the types in e *)
+			subs
+		| _ -> subs
+	end
+	in
+	begin match currentTE.tlink_node with
+		  Tempty -> subs
+		| Tnode nextTnode ->
+			let subs = unifyTwoTE (currentTE.texp_node) (nextTnode.texp_node) subs in
+			begin match nextTnode.tlink_node with
+				  Tempty -> subs
+				| Tnode _ ->
+					unifyTE nextTnode subs
+			end
+	end
+;;
+
+
+
+let rec unifyCS currentC rootCS subs =
+	let subs = unifyTE currentC.cnstrnt subs in
+	match currentC.link with
+	  Cnode node ->
+		let subs = unifyCS node rootCS subs in
+		subs
+	| Cempty -> subs
+;;
+(* ======================================================= Unify ===================================================== *)
+
+
 *)
 
 
