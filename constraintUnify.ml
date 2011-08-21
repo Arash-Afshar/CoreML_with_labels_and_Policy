@@ -3,21 +3,56 @@ open PrettyPrinter;;
 open Syntax;;
 
 
+
+exception UnunifyingConstraints of string;;
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++ Unify Expressions +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let rec unifyTwoE e1 e2 subs =
-	match e1, e2 with
-	  Var v1, Var v2 -> 1
-	| Var v, exp -> 1
-	| exp, Var v -> 1
-	| Fun(v1, e1), Fun(v2, e2) -> 1
-	| App(e1, e2), App(e3, e4) -> 1
-	| Let(vl1, e1, e2), Let(vl2, e3, e4) -> 1
-	| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> 1
-	| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> 1
-	| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> 1
-;;
+
+let rec unifyTwoE e1 e2 =
+	begin match e1, e2 with
+	  Evar v1, Evar v2 ->
+		(Evar v1, Evar v2)
+	| Evar v, Econ expr ->
+		unifyExp expr;
+		(e1, e2)
+	| Econ expr, Evar v ->
+		unifyExp expr;
+		(e2, e1)
+	| Econ expr1, Econ expr2 ->
+		begin match expr1, expr2 with
+		  Var v1, Var v2 ->
+			begin
+				if (v1 != v2) then
+					raise (UnunifyingConstraints ("expression variables "^v1^" and "^v2^" cannot be unified!")) (* fixme: it might be wrong!*)
+				else
+					(Evar (-1), Evar (-1)) (* means: nothing to do *)
+			end
+		(*| Var v, exp -> 1
+		| exp, Var v -> 1*)
+		| Fun(v1, e1), Fun(v2, e2) ->
+			begin 
+				let subs1 = unifyTwoE (Econ (Var v1)) (Econ (Var v2)) in
+				(* substitute the changes *)
+				let subs2 = unifyTwoE (Econ e1) (Econ e2) in
+				subs2
+			end
+		| App(e1, e2), App(e3, e4) ->
+			begin 
+				let subs1 = unifyTwoE (Econ e1) (Econ e3) in
+				(* substitute the changes *)
+				let subs2 = unifyTwoE (Econ e2) (Econ e4) in
+				subs2
+			end
+		| Let(vl1, e1, e2), Let(vl2, e3, e4) -> (Evar (-1), Evar (-1))
+		| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> (Evar (-1), Evar (-1))
+		| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> (Evar (-1), Evar (-1))
+		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> (Evar (-1), Evar (-1))
+		| _ -> (Evar (-2), Evar (-2))
+		end
+	end
+and
+unifyExp e = 1;;
 (* ================================================= Unify Expressions ============================================== *)
 
 
@@ -334,7 +369,7 @@ let applyAndClean subs cs =
 let rec unifyE1 currentE rootCS = [];;
 let rec unifyTwoE1 e1 e2 rootCS = [];;
 
-exception UnunifyingConstraints of string;;
+
 let rec unifyTwoTE1 te1 te2 rootCS =
 	match te1, te2 with
 	  Tvar var, Tcon (Tarrow, [t1; t2]) ->
