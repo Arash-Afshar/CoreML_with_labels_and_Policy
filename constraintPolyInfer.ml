@@ -1,4 +1,5 @@
-(* NOTICE: SIn the paper, I have defined alpha to be type variable. Therefore, by definition alpha cannot match to somthing like t{e}. But here, evar() can match both types of the form t and t{e}. Thus, tevar() is created! *)
+(* NOTICE: In the paper, I have defined alpha to be type variable. Therefore, by definition alpha cannot match to somthing like t{e}. But here, evar() can match both types of the form t and t{e}. Thus, tevar() is created! *)
+(* fixme: there is a problem! in T-UNLAB, if the type has only one lable, the resulting type would have literally no label. Therefore, it would not match expressions with NOL labels. this sitution can happen in other places to! So, the problem is how to match NOLs with really no labels and also how to match these two types which are actually equal:           t{NOL}{l1}{NOL}{l2}{l3} and t{l1}{l2}{l3}      or             t{NOL} and t  *)
 open Syntax;;
 open ConstraintUnify;;
 open PrettyPrinter;;
