@@ -7,7 +7,7 @@ and edesc = Evar  of int | Econ of expr;;
 type type_symbol = Tarrow | Tint | Tbool | Tlab of eeeenode
 type ttttnode = { mutable  texp_node : tdesc; mutable tlink_node : texp; mutable  tmark : int }
 and texp = Tempty | Tnode of ttttnode
-and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabled  of ttttnode * eexp;;
+and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabeled  of ttttnode * eexp;;
 
 let eexp e = { eexp_node = e; elink_node = Eempty; emark = 0 };;
 let texp d = { texp_node = d; tlink_node = Tempty; tmark = 0 };;
@@ -34,8 +34,10 @@ let tint         = texp (Tcon (Tint,  []))
 let tbool        = texp (Tcon (Tbool, []))
 let tlab e       = texp (Tcon (Tlab e,  []))
 let tarrow t1 t2 = texp (Tcon (Tarrow, [t1; t2]))
-let tlabled t e  = texp (Tlabled (t, e));;
+let tlabeled t e = texp (Tlabeled (t, Enode e))
+let nol          = eexp (Econ noLab);;
 
+let tevar() = tlabeled (tvar()) (evar());;
 
 type csNode = { mutable cnstrnt : ttttnode; mutable link : cSet }
 and cSet = Cempty | Cnode of csNode;;
@@ -90,5 +92,6 @@ let tdesc t  =
 	  Tnode u -> assert  false
 	| Tempty -> t.texp_node;;
 
-let link t1 t2 = (repr (Tnode t1)).tlink_node <- (Tnode t2);;
+let link  t1 t2 = ( repr (Tnode t1)).tlink_node <- (Tnode t2);;
+let elink e1 e2 = (erepr (Enode e1)).elink_node <- (Enode e2);;
 

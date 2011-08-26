@@ -154,7 +154,7 @@ let rec string_of_short_texp t=
 *)
 		| Tarrow , l -> "( "^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^" )"
 		end
-	| Tlabled (t, e) ->
+	| Tlabeled (t, e) ->
 		begin match e with
 			  Eempty     ->
 				string_of_short_texp t
@@ -208,7 +208,7 @@ let rec string_of_constraint c =
 			let t2 = List.hd(List.tl(l)) in
 				"( "^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^" )"
 		end
-	| { texp_node = Tlabled (t, e); tlink_node = Tempty; tmark = 0 } ->
+	| { texp_node = Tlabeled (t, e); tlink_node = Tempty; tmark = 0 } ->
 		begin match e with
 			  Eempty     ->
 				string_of_short_texp t
