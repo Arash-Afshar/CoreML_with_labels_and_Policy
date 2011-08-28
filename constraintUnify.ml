@@ -10,11 +10,13 @@ open Syntax;;
 let rec addBatchLabels labelList labelAcceptingPart =
 	let length = (List.length labelList) in
 	if (length != 0) then
-		(tlabaled labelAcceptingPart (List.hd labelList))
+		(tlabeled labelAcceptingPart (List.hd labelList))
+	else
+		labelAcceptingPart
 ;;
 
 let rec addLabelsToType labelList unlabeledPart parent =
-	te.texp_node <- (addBatchLabels labelList unlabeledPart)
+parent.texp_node <- (addBatchLabels labelList unlabeledPart).texp_node
 ;; 
 
 let rec delNOLs labelList resultList =
@@ -31,15 +33,21 @@ let rec delNOLs labelList resultList =
 	end
 ;;
 
+let del_notAll_NOLs labelList resultList =
+	let res = delNOLs labelList resultList in
+	if (List.length res) == 0 then
+		[nol]
+	else
+		res
+;;
+
 let rec delNOLsTE (Tnode te) =
 	match te.texp_node with
 	  Tlabeled (t, e) ->
 		let labelList = getAllLabels te in
-		let newLabelList = delNOLs labelList in
-		let unlabeledPart = getUnlabeledPart te in
-		addLabelsToType newLabelList unlabeledPart te
-	| _ ->
-		-4
+		let newLabelList = del_notAll_NOLs labelList [] in
+		let unlabeledPart = texp (getUnlabeledPart te) in
+		addLabelsToType newLabelList unlabeledPart te;
 ;;
 
 let rec traverseDelNOLsTE (Tnode te) =
@@ -63,11 +71,6 @@ let rec delNOLsCS csNode =
 			delNOLsCS node; -12
 		| Cempty -> -13
 ;;
-
-let extract e =
-	let (Econ res) = e.eexp_node in
-	res;;
-
 (* ==================================================== Delete NOLs ================================================== *)
 
 
@@ -119,7 +122,7 @@ let rec unifyTwoE e1 e2 =
 		end
 	end
 and
-unifyExp e = 1;;
+unifyExp e = 1;; (* fixme *)
 (* ================================================= Unify Expressions ============================================== *)
 
 
@@ -429,13 +432,15 @@ Func3: a function that traverses CS
 let applyAndClean subs cs =
 	let _ = applySubs subs cs in
 	let _ = delEqCS cs in
+	let _ = delNOLsCS in
 	(*let _ = delSingleInCS cs cs in*)
 		-2
 ;;
 
+(*
 let rec unifyE1 currentE rootCS = [];;
 let rec unifyTwoE1 e1 e2 rootCS = [];;
-
+*)
 
 let rec unifyTwoTE1 te1 te2 rootCS =
 	match te1, te2 with
@@ -539,6 +544,10 @@ let rec unifyCS1 currentC rootCS =
 
 (**
 Test of delNOLs:
+
+let extract e =
+	let (Econ res) = e.eexp_node in
+	res;;
 
 print_string("ZZZZZZZZZZZZZZZZZZZZZZZZZ\n");;
 let t1 = (tlabeled (tlabeled (tlabeled (tlabeled (tlabeled (tlabeled (texp (Tvar 1)) nol) zZZZZZZZZZ) nol) nol) yYYYYYYYYY) yYYYYYYYYY) in

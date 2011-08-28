@@ -37,7 +37,9 @@ let int3 = (tlabeled (tarrow (tlabeled tint nol) (tlabeled (tarrow (tlabeled tin
 			let e2		= evar() in
 			let tPartOf_te1 = tvar() in
 			let te1		= tlabeled tPartOf_te1 e2 in
-			link t (tlabeled (tarrow te1 tPartOf_te1 ) nol); addC t setC in (* fixme: adding nol to tPartOf_te1 leads to stack_overflow *) (* nol is added to tPartOf_te1 to make sure that it has a label even if e2 was its last label *)
+			(*link t (tlabeled (tarrow te1 (tlabeled tPartOf_te1 nol)) nol); addC t setC in*)
+			link t (tlabeled (tarrow te1 tPartOf_te1) nol); addC t setC in
+			(* fixme: adding nol to tPartOf_te1 leads to stack_overflow *) (* nol is added to tPartOf_te1 to make sure that it has a label even if e2 was its last label *)
 		rem
 	| Name ("getLab") -> (* T-GETLAB *)
 		let get =
