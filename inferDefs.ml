@@ -36,6 +36,8 @@ let tlab e       = texp (Tcon (Tlab e,  []))
 let tarrow t1 t2 = texp (Tcon (Tarrow, [t1; t2]))
 let tlabeled t e = texp (Tlabeled (t, Enode e))
 let nol          = eexp (Econ noLab);;
+let zZZZZZZZZZ = eexp (Econ high);;
+let yYYYYYYYYY = eexp (Econ low);;
 
 let tevar() = tlabeled (tvar()) (evar());;
 
@@ -53,9 +55,6 @@ let rec crepr cs =
 		end
 	| Cempty -> assert false;;
 let addC c cs = (crepr (Cnode cs)).link <- Cnode (csnode c);;
-
-
-
 
 let last_mark = ref 0
 let marker() = incr last_mark; !last_mark;;
@@ -94,4 +93,25 @@ let tdesc t  =
 
 let link  t1 t2 = ( repr (Tnode t1)).tlink_node <- (Tnode t2);;
 let elink e1 e2 = (erepr (Enode e1)).elink_node <- (Enode e2);;
+
+let rec getAllLabels t =
+	match t.texp_node with
+		  Tlabeled(t2,e) ->
+			begin match e with
+			  Eempty ->
+				[] (* fixme: Error *)
+			| Enode enode ->
+				(getAllLabels t2)@[enode]
+			end
+		| _ ->
+			[]
+;;
+
+let rec getUnlabeledPart t =
+	match t.texp_node with
+		  Tlabeled(t2,e) ->
+			getUnlabeledPart t2
+		| _ ->
+			t.texp_node
+;;
 

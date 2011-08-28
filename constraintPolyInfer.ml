@@ -1,5 +1,6 @@
 (* NOTICE: In the paper, I have defined alpha to be type variable. Therefore, by definition alpha cannot match to somthing like t{e}. But here, evar() can match both types of the form t and t{e}. Thus, tevar() is created! *)
-(* fixme: there is a problem! in T-UNLAB, if the type has only one lable, the resulting type would have literally no label. Therefore, it would not match expressions with NOL labels. this sitution can happen in other places to! So, the problem is how to match NOLs with really no labels and also how to match these two types which are actually equal:           t{NOL}{l1}{NOL}{l2}{l3} and t{l1}{l2}{l3}      or             t{NOL} and t  *)
+(* fixme: there is a problem! in T-UNLAB, if the type has only one lable, the resulting type would have literally no label. Therefore, it would not match expressions with NOL labels. this sitution can happen in other places to! So, the problem is how to match NOLs with really no labels and also how to match these two types which are actually equal:           t{NOL}{l1}{NOL}{l2}{l3} and t{l1}{l2}{l3}           or             t{NOL} and t  *)
+(* solution: In remLab, I will always add nol, then after constraint generation finishes, in unification part, I will omit nol labels just like the way I delete equal types. *)
 open Syntax;;
 open ConstraintUnify;;
 open PrettyPrinter;;
@@ -28,7 +29,7 @@ let int3 = (tlabeled (tarrow (tlabeled tint nol) (tlabeled (tarrow (tlabeled tin
 			let te1			 = tlabeled (tlab e1) nol in
 			let te2			 = tevar() in
 			let tres		 = (tlabeled te2 e1) in
-			link t (tlabeled (tarrow te1 (tlabeled (tarrow te2 tres) nol)) nol);
+			link t (tlabeled (tarrow te1 (tlabeled (tarrow te2 tres) nol)) nol); 
 			addC t setC in
 		add
 	| Name ("remLab") -> (* T-UNLAB *)
@@ -36,7 +37,7 @@ let int3 = (tlabeled (tarrow (tlabeled tint nol) (tlabeled (tarrow (tlabeled tin
 			let e2		= evar() in
 			let tPartOf_te1 = tvar() in
 			let te1		= tlabeled tPartOf_te1 e2 in
-			link t (tlabeled (tarrow te1 tPartOf_te1) nol); addC t setC in
+			link t (tlabeled (tarrow te1 tPartOf_te1 ) nol); addC t setC in (* fixme: adding nol to tPartOf_te1 leads to stack_overflow *) (* nol is added to tPartOf_te1 to make sure that it has a label even if e2 was its last label *)
 		rem
 	| Name ("getLab") -> (* T-GETLAB *)
 		let get =
@@ -68,18 +69,6 @@ let rec create_lam_expr varList expr =
 	else
 		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
 
-let rec getAllLabels t =
-	match t.texp_node with
-		  Tlabeled(t2,e) ->
-			begin match e with
-			  Eempty ->
-				[] (* fixme: Error *)
-			| Enode enode ->
-				enode::(getAllLabels t2)
-			end
-		| _ ->
-			[]
-;;
 
 let rec assertEqual labelList label =
 	let length = (List.length labelList) in

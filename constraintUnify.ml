@@ -3,6 +3,73 @@ open PrettyPrinter;;
 open Syntax;;
 
 
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* ++++++++++++++++++++++++++++++++++++++++++++++++++++ Delete NOLs ++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+
+let rec addBatchLabels labelList labelAcceptingPart =
+	let length = (List.length labelList) in
+	if (length != 0) then
+		(tlabaled labelAcceptingPart (List.hd labelList))
+;;
+
+let rec addLabelsToType labelList unlabeledPart parent =
+	te.texp_node <- (addBatchLabels labelList unlabeledPart)
+;; 
+
+let rec delNOLs labelList resultList =
+	let length = (List.length labelList) in
+	if (length == 0) then
+		resultList
+	else
+	begin
+		let hd = (List.hd labelList) in
+		if hd == nol then
+			delNOLs (List.tl labelList) resultList
+		else
+			delNOLs (List.tl labelList) (resultList @ [hd])
+	end
+;;
+
+let rec delNOLsTE (Tnode te) =
+	match te.texp_node with
+	  Tlabeled (t, e) ->
+		let labelList = getAllLabels te in
+		let newLabelList = delNOLs labelList in
+		let unlabeledPart = getUnlabeledPart te in
+		addLabelsToType newLabelList unlabeledPart te
+	| _ ->
+		-4
+;;
+
+let rec traverseDelNOLsTE (Tnode te) =
+	match te.texp_node with
+	  Tcon (Tarrow, [t1;t2]) ->
+		traverseDelNOLsTE (Tnode t1); traverseDelNOLsTE (Tnode t2);
+	| Tlabeled (t, e) ->
+		(* fixme: delete equal e *)
+		traverseDelNOLsTE (Tnode t);
+		delNOLsTE (Tnode te);
+		-15
+	| _ ->
+		-14
+;;
+
+
+let rec delNOLsCS csNode =
+	traverseDelNOLsTE (Tnode csNode.cnstrnt);
+	match csNode.link with
+		  Cnode node ->
+			delNOLsCS node; -12
+		| Cempty -> -13
+;;
+
+let extract e =
+	let (Econ res) = e.eexp_node in
+	res;;
+
+(* ==================================================== Delete NOLs ================================================== *)
+
 
 exception UnunifyingConstraints of string;;
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
@@ -470,6 +537,21 @@ let rec unifyCS1 currentC rootCS =
 
 
 
+(**
+Test of delNOLs:
+
+print_string("ZZZZZZZZZZZZZZZZZZZZZZZZZ\n");;
+let t1 = (tlabeled (tlabeled (tlabeled (tlabeled (tlabeled (tlabeled (texp (Tvar 1)) nol) zZZZZZZZZZ) nol) nol) yYYYYYYYYY) yYYYYYYYYY) in
+let t2 = (tlabeled (tlabeled (tlabeled (tlabeled (texp (Tvar 1)) zZZZZZZZZZ) nol) yYYYYYYYYY) nol) in
+let t3 = (tlabeled (tlabeled (tlabeled (tlabeled (texp (Tvar 1)) nol) zZZZZZZZZZ) yYYYYYYYYY) nol) in
+let t4 = (tlabeled (tlabeled (tlabeled (tlabeled (texp (Tvar 1)) zZZZZZZZZZ) nol) nol) yYYYYYYYYY) in
+let labelList = getAllLabels t4 in
+let newLabelList = delNOLs labelList [] in
+	print_type (texp (getUnlabeledPart t4)); print_newline();
+	(*print_string (string_of_concrete_expr (extract (List.hd labelList)));*)
+	print_string (string_of_labelList (List.map extract newLabelList));;
+print_string("\nZZZZZZZZZZZZZZZZZZZZZZZZZ\n");;
+*)
 
 
 
