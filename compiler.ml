@@ -25,7 +25,7 @@ let _ =
 		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
 		while true do
 			let result = Parser.main Lexer.token lexbuf in
-			let t = tvar() and cs = csInit in
+			let t = tevar() and cs = csInit in
 			(*let etPair = (ETnode initExpTypePair) in*)
 			let _ = genConstrSet result t cs (*etPair*) in
 			(*print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();

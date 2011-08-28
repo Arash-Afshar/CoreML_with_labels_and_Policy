@@ -72,7 +72,7 @@ let rec subsVarVar (tv1, tv2) te =
 				subsVarVar (tv1, tv2) (List.hd l); subsVarVar (tv1, tv2) (List.hd (List.tl l)); -16
 			| _ -> -17
 		end
-	| Tlabled (t, e) ->
+	| Tlabeled (t, e) ->
 		subsVarVar (tv1, tv2) t; -18
 	| _ -> -19
 	end;
@@ -109,7 +109,7 @@ let rec subsVarOther (tv, other) te =
 				subsVarOther (tv, other) (List.hd l); subsVarOther (tv, other) (List.hd (List.tl l)); -16
 			| _ -> -17
 		end
-	| Tlabled (t, e) ->
+	| Tlabeled (t, e) ->
 		subsVarOther (tv, other) t; -18
 	| _ -> -19
 	end;
@@ -158,7 +158,7 @@ areTexpEqual te1 te2 =
 		| Tcon (Tint, _), Tcon (Tint, _) -> true
 		| Tcon (Tbool, _), Tcon (Tbool, _) -> true
 		| Tcon (Tlab _, _), Tcon (Tlab _, _) -> true (* fixme *)
-		| Tlabled (t1, e1), Tlabled (t2, e2) ->
+		| Tlabeled (t1, e1), Tlabeled (t2, e2) ->
 			let t = areTexpEqual t1.texp_node t2.texp_node in
 			let e = areExpEqual e1 e2 in
 				t & e
@@ -185,7 +185,7 @@ let rec traverseDelEqTE (Tnode te) =
 	  Tcon (Tarrow, [t1;t2]) ->
 		traverseDelEqTE (Tnode t1); traverseDelEqTE (Tnode t2);
 		delEqTE (Tnode te) 
-	| Tlabled (t, e) ->
+	| Tlabeled (t, e) ->
 		(* fixme: delete equal e *)
 		traverseDelEqTE (Tnode t);
 		delEqTE (Tnode te)
@@ -223,7 +223,7 @@ let rec isSingleTE te =
 						false
 				| _ -> false
 			end;
-		| Tlabled (t, e) ->
+		| Tlabeled (t, e) ->
 			let inner = isSingleTE t in
 			begin match te.tlink_node with
 				  Tempty ->
@@ -286,7 +286,7 @@ let rec applySubs (te1, te2) csNode =
 		-50
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		-51 (* fixme: error *)
-	| Tlabled (t1, e1), Tlabled (t2, e2) ->
+	| Tlabeled (t1, e1), Tlabeled (t2, e2) ->
 		-52 (* fixme: error *)
 	| _ ->
 		-53 (* fixme: error *)
@@ -324,10 +324,10 @@ Func1: a function that unifies two TEs:
 	1.1.1. call Func2 on arrow arg1
 	1.1.2. call Func2 on arrow arg2
 	1.1.3. return subs of var with arrow (be careful, var may have been changed because of the substitution)
-	1.2. var labled | labled var ->
-	1.2.1. call Func2 on labled type
-	1.2.2. call Func0 on labled label
-	1.2.3. return subs of var with labled (be careful, var may have been changed because of the substitution)
+	1.2. var labeld | labeld var ->
+	1.2.1. call Func2 on labeld type
+	1.2.2. call Func0 on labeld label
+	1.2.3. return subs of var with labeld (be careful, var may have been changed because of the substitution)
 	1.3. var var    -> straight forward
 	1.4. var others -> straight forward
 	1.5. arrow arrow   ->
@@ -339,14 +339,14 @@ Func1: a function that unifies two TEs:
 	1.5.6. call Func4
 	1.5.7. call Func1 on (arrow1 arg2) and (arrow2 arg2)
 	1.5.8. call Func4
-	1.6. labled labled ->
-	1.6.1. call Func2 on labled1 type
-	1.6.2. call Func2 on labled2 type
-	1.6.3. call Func0 on labled1 label
-	1.6.4. call Func0 on labled2 label
-	1.6.5. call Func1 on (labled1 type) and (labled2 type)
+	1.6. labeld labeld ->
+	1.6.1. call Func2 on labeld1 type
+	1.6.2. call Func2 on labeld2 type
+	1.6.3. call Func0 on labeld1 label
+	1.6.4. call Func0 on labeld2 label
+	1.6.5. call Func1 on (labeld1 type) and (labeld2 type)
 	1.6.6. call Func4
-	1.6.7. call Func0 on (labled1 label) and (labled2 label)
+	1.6.7. call Func0 on (labeld1 label) and (labeld2 label)
 	1.6.8. call Func4
 	1.7. other other   -> trivial
 	1.8. not the same  -> error
@@ -380,11 +380,11 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		unifyTE1 (Tnode t1) rootCS;
 		unifyTE1 (Tnode t2) rootCS;
 		(te2, te1)
-	| Tvar var, Tlabled (t, e) ->
+	| Tvar var, Tlabeled (t, e) ->
 		unifyTE1 (Tnode t) rootCS;
 		unifyE1  e rootCS;
 		(te1, te2)
-	| Tlabled (t, e), Tvar var ->
+	| Tlabeled (t, e), Tvar var ->
 		unifyTE1 (Tnode t) rootCS;
 		unifyE1  e rootCS;
 		(te2, te1)
@@ -403,7 +403,7 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		let _ = applyAndClean argSubs rootCS in
 		let resSubs = unifyTwoTE1 t12.texp_node t22.texp_node rootCS in
 		resSubs
-	| Tlabled (t1, e1), Tlabled (t2, e2) ->
+	| Tlabeled (t1, e1), Tlabeled (t2, e2) ->
 		unifyTE1 (Tnode t1) rootCS;
 		unifyTE1 (Tnode t2) rootCS;
 		unifyE1  e1 rootCS;
@@ -510,7 +510,7 @@ let rec isSingleTE te =
 					| _ -> false
 				end
 			end
-		| Tlabled (t, e) ->
+		| tlabeled (t, e) ->
 			isSingleTE t;
 ;;
 
@@ -555,7 +555,7 @@ let rec delEqTE te =
 				delEqTE (List.hd l); delEqTE (List.hd (List.tl l)); -6
 			| _ -> -7
 		end
-	| Tlabled (t, e) ->
+	| tlabeled (t, e) ->
 		delEqTE t; -8
 	| _ -> -9
 	end;
@@ -588,7 +588,7 @@ let rec subsTE tv1 tv2 te =
 				subsTE tv1 tv2 (List.hd l); subsTE tv1 tv2 (List.hd (List.tl l)); -16
 			| _ -> -17
 		end
-	| Tlabled (t, e) ->
+	| tlabeled (t, e) ->
 		subsTE tv1 tv2 t; -18
 	| _ -> -19
 	end;
@@ -621,7 +621,7 @@ let rec unifyVarInTE te cs =
 				unifyVarInTE (List.hd l) cs; unifyVarInTE (List.hd (List.tl l)) cs; -26
 			| _ -> -27
 		end
-	| Tlabled (t, e) ->
+	| tlabeled (t, e) ->
 		unifyVarInTE t cs; -28
 	| _ -> -29
 	end;
@@ -666,7 +666,7 @@ let rec unifyTwoTE te1 te2 rootCS =
 		-50
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		-51
-	| Tlabled (t1, e1), Tlabled (t2, e2) ->
+	| tlabeled (t1, e1), tlabeled (t2, e2) ->
 		-52
 	| _ ->
 		-53
@@ -683,7 +683,7 @@ let rec unifyTE currentTE rootCS =
 				| _ ->
 					-40
 			end;
-		| Tlabled (t, e) ->
+		| tlabeled (t, e) ->
 			unifyTE t rootCS; -41
 		| _ -> -42
 	end;
@@ -724,7 +724,7 @@ let rec unifyTwoTE te1 te2 subs =
 		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
 		let resUnify = unifyTwoTE t21.texp_node t22.texp_node subs in
 		argUnify@resUnify@subs;
-	| Tlabled (t1, e1), Tlabled (t2, e2) ->
+	| tlabeled (t1, e1), tlabeled (t2, e2) ->
 		let typeUnify = unifyTwoTE t1.texp_node t2.texp_node subs in
 		(* let unifiedT12 = applySubs (List.hd argUnify) rootCS  *) (* fixme: the line should correctly be implemented *)
 		let labUnify = unifyTwoE e1 e2 subs in
@@ -742,7 +742,7 @@ let rec unifyTE currentTE subs =
 			let subs = unifyTE (List.hd l) subs in
 			let subs = unifyTE (List.hd (List.tl l)) subs in
 			subs
-		| Tlabled (t, e) ->
+		| tlabeled (t, e) ->
 			let subs = unifyTE t subs in (* fixme: we should also unify the types in e *)
 			subs
 		| _ -> subs
