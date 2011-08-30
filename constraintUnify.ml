@@ -80,14 +80,14 @@ exception UnunifyingConstraints of string;;
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 
 let rec unifyTwoE e1 e2 =
-	begin match e1, e2 with
+	match e1, e2 with
 	  Evar v1, Evar v2 ->
 		(Evar v1, Evar v2)
 	| Evar v, Econ expr ->
-		unifyExp expr;
+		(*unifyExp expr;*)
 		(e1, e2)
 	| Econ expr, Evar v ->
-		unifyExp expr;
+		(*unifyExp expr;*)
 		(e2, e1)
 	| Econ expr1, Econ expr2 ->
 		begin match expr1, expr2 with
@@ -120,9 +120,27 @@ let rec unifyTwoE e1 e2 =
 		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> (Evar (-1), Evar (-1))
 		| _ -> (Evar (-2), Evar (-2))
 		end
-	end
-and
-unifyExp e = 1;; (* fixme *)
+(*and
+unifyExp currentTE rootCS = 
+	match currentTE with
+		  Tempty ->
+			-3
+		| Tnode node ->
+			begin match node.tlink_node with	
+				  Tempty ->
+					(*delSingleInCS rootCS rootCS;*) -4
+				| Tnode nextTnode ->
+					let subs = unifyTwoTE1 (node.texp_node) (nextTnode.texp_node) rootCS in
+					begin match subs with
+						  (Tvar (-1), Tvar (-1)) -> (* for optimization, we only delete  equal *)
+							delEqCS rootCS; (*delSingleInCS rootCS rootCS;*) -5
+						(*fixme: error handling is done in unifyTwoTE1 *)	
+						| _  ->
+							applyAndClean subs rootCS; -6
+					end;
+					unifyTE1 currentTE rootCS;
+			end*)
+;; (* fixme *)
 (* ================================================= Unify Expressions ============================================== *)
 
 
@@ -164,46 +182,9 @@ let rec subsVarVarCS (tv1, tv2) csNode =
 
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* ++++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with other ++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let rec subsVarOther (tv, other) te =
-	begin match te.texp_node with
-	  Tvar var0 ->
-		if (var0 == tv) then
-			begin te.texp_node <- other; -14 end
-		else
-			-15
-	| Tcon (sym, l)->
-		begin match sym with
-			  Tarrow ->
-				subsVarOther (tv, other) (List.hd l); subsVarOther (tv, other) (List.hd (List.tl l)); -16
-			| _ -> -17
-		end
-	| Tlabeled (t, e) ->
-		subsVarOther (tv, other) t; -18
-	| _ -> -19
-	end;
-	begin match te.tlink_node with
-	  Tnode node ->
-		subsVarOther (tv, other) node; -20
-	| Tempty -> -21
-	end
-;;
-
-let rec subsVarOtherCS (tv, other) csNode =
-	subsVarOther (tv, other) csNode.cnstrnt;
-	match csNode.link with
-		  Cnode node ->
-			subsVarOtherCS (tv, other) node; -22
-		| Cempty -> -23
-;;
-(* =============================================== Subs Var with other =============================================== *)
-
-
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++ Delete Redundant +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let areExpEqual e1 e2 = true;;
+let areExpEqual e1 e2 = true;; (* fixme *)
 
 let areTvarsEqual (Tvar tv1) (Tvar tv2) =
 	if (tv1 == tv2) then
@@ -335,8 +316,45 @@ let rec delSingleInCS currentC parentC = (* fixme: a single constrtaint should n
 
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* ++++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with other ++++++++++++++++++++++++++++++++++++++++++++++ *)
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let rec subsVarOther (tv, other) te =
+	begin match te.texp_node with
+	  Tvar var0 ->
+		if (var0 == tv) then
+			begin te.texp_node <- other; -14 end
+		else
+			-15
+	| Tcon (sym, l)->
+		begin match sym with
+			  Tarrow ->
+				subsVarOther (tv, other) (List.hd l); subsVarOther (tv, other) (List.hd (List.tl l)); -16
+			| _ -> -17
+		end
+	| Tlabeled (t, e) ->
+		subsVarOther (tv, other) t; -18
+	| _ -> -19
+	end;
+	begin match te.tlink_node with
+	  Tnode node ->
+		subsVarOther (tv, other) node; -20
+	| Tempty -> -21
+	end
+;;
+
+let rec subsVarOtherCS (tv, other) csNode =
+	subsVarOther (tv, other) csNode.cnstrnt;
+	match csNode.link with
+		  Cnode node ->
+			subsVarOtherCS (tv, other) node; -22
+		| Cempty -> -23
+;;
+(* =============================================== Subs Var with other =============================================== *)
+
+(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++ apply substitute +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+
 let rec applySubs (te1, te2) csNode =
 	match te1, te2 with
 	  Tvar -1, Tvar -1 ->
@@ -374,7 +392,53 @@ let rec applySubsCS subsSet csNode =
 				| Cempty -> -23
 			end
 ;;
+
+let rec applyExpSubs (e1, e2) csNode = (* fixme *)
+	begin match e1, e2 with
+	  Evar v1, Evar v2 ->
+		(Evar v1, Evar v2)
+	| Evar v, Econ expr ->
+		(*unifyExp expr;*)
+		(e1, e2)
+	| Econ expr, Evar v ->
+		(*unifyExp expr;*)
+		(e2, e1)
+	| Econ expr1, Econ expr2 ->
+		begin match expr1, expr2 with
+		  Var v1, Var v2 ->
+			begin
+				if (v1 != v2) then
+					raise (UnunifyingConstraints ("expression variables "^v1^" and "^v2^" cannot be unified!")) (* fixme: it might be wrong!*)
+				else
+					(Evar (-1), Evar (-1)) (* means: nothing to do *)
+			end
+		(*| Var v, exp -> 1
+		| exp, Var v -> 1*)
+		| Fun(v1, e1), Fun(v2, e2) ->
+			begin 
+				let subs1 = unifyTwoE (Econ (Var v1)) (Econ (Var v2)) in
+				(* substitute the changes *)
+				let subs2 = unifyTwoE (Econ e1) (Econ e2) in
+				subs2
+			end
+		| App(e1, e2), App(e3, e4) ->
+			begin 
+				let subs1 = unifyTwoE (Econ e1) (Econ e3) in
+				(* substitute the changes *)
+				let subs2 = unifyTwoE (Econ e2) (Econ e4) in
+				subs2
+			end
+		| Let(vl1, e1, e2), Let(vl2, e3, e4) -> (Evar (-1), Evar (-1))
+		| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> (Evar (-1), Evar (-1))
+		| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> (Evar (-1), Evar (-1))
+		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> (Evar (-1), Evar (-1))
+		| _ -> (Evar (-2), Evar (-2))
+		end
+	end
+;;
 (* ================================================== apply substitute =============================================== *)
+
+
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++++ Unify Types ++++++++++++++++++++++++++++++++++++++++++++++++++ *)
@@ -454,11 +518,11 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		(te2, te1)
 	| Tvar var, Tlabeled (t, e) ->
 		unifyTE1 (Tnode t) rootCS;
-		unifyE1  e rootCS;
+		(*unifyExp e rootCS;*)
 		(te1, te2)
 	| Tlabeled (t, e), Tvar var ->
 		unifyTE1 (Tnode t) rootCS;
-		unifyE1  e rootCS;
+		(*unifyExp e rootCS;*)
 		(te2, te1)
 	| Tvar var1, Tvar var2 ->
 		(te1, te2);
@@ -475,16 +539,17 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		let _ = applyAndClean argSubs rootCS in
 		let resSubs = unifyTwoTE1 t12.texp_node t22.texp_node rootCS in
 		resSubs
-	| Tlabeled (t1, e1), Tlabeled (t2, e2) ->
+	| Tlabeled (t1, (Enode e1)), Tlabeled (t2, (Enode e2)) ->
 		unifyTE1 (Tnode t1) rootCS;
 		unifyTE1 (Tnode t2) rootCS;
-		unifyE1  e1 rootCS;
-		unifyE1  e2 rootCS;
+		(*unifyExp  e1 rootCS;
+		unifyExp  e2 rootCS;*)
 		let typeSubs = unifyTwoTE1 t1.texp_node t2.texp_node rootCS in
-		(*let _ = applyAndClean typeSubs rootCS in
-		let labSubs = unifyTwoE1 e1 e2 rootCS in
-		labSubs*)
-		typeSubs (* fixme: in complete implementation this line should be deleted and the three lines above should be uncommented *)
+		let _ = applyAndClean typeSubs rootCS in
+		(*let labSubs = unifyTwoE1 e1 e2 rootCS in*)
+		let labSubs = unifyTwoE e1.eexp_node e2.eexp_node in
+		let _ = applyExpSubs labSubs in 
+		typeSubs (* fixme: in the complete implementation this line should be deleted and the three lines above should be uncommented *)
 	| Tcon (Tint, []), Tcon (Tint, []) ->
 		(Tvar (-1), Tvar (-1));
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
