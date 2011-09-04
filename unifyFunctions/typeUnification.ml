@@ -84,7 +84,7 @@ let rec subsVarOtherCS (tv, other) csNode =
 (* ++++++++++++++++++++++++++++++++++++++++++++++++ apply substitute +++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 
-let rec applySubs (te1, te2) csNode =
+let rec applySubsCS (te1, te2) csNode =
 	match te1, te2 with
 	  Tvar -1, Tvar -1 ->
 		-44
@@ -98,8 +98,9 @@ let rec applySubs (te1, te2) csNode =
 		-48
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
 		-49
-	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
+	| Tcon (Tlab l1, []), Tcon (Tlab l2, []) ->
 		(* fixme: expression substitution *)
+		applyExpSubsCS (l1.eexp_node, l2.eexp_node) csNode;
 		-50
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		-51 (* fixme: error *)
@@ -110,16 +111,16 @@ let rec applySubs (te1, te2) csNode =
 ;;
 
 
-let rec applySubsCS subsSet csNode =
+let rec applySubsList subsSet csNode =
 	match subsSet with
 		  [] -> -24
 		| _  ->
 			begin
-			applySubs (List.hd subsSet) csNode;
+			applySubsCS (List.hd subsSet) csNode;
 			(*applyExpSubs (List.hd subsSet) csNode;*)
 			match csNode.link with
 				  Cnode node ->
-					applySubsCS (List.tl subsSet) csNode; -22
+					applySubsList (List.tl subsSet) csNode; -22
 				| Cempty -> -23
 			end
 ;;
@@ -181,9 +182,9 @@ Func2: a function that traverses TEs:
 
 Func3: a function that traverses CS
 *)
-let applyAndClean tSubs eSubs cs =
-	let _ = applySubs tSubs cs in (** fixme *)
-	let _ = applyExpSubsCS eSubs cs in (** fixme *)
+let applyAndClean tSubs cs =
+	let _ = applySubsCS tSubs cs in (* fixme *)
+	(*let _ = applyExpSubsCS eSubs cs in (** fixme *)*)
 	let _ = delEqCS cs in
 	let _ = delNOLsCS in
 	(*let _ = delSingleInCS cs cs in*)
@@ -197,7 +198,7 @@ let rec unifyTwoE1 e1 e2 rootCS = [];;
 
 let rec unifyTwoTE1 te1 te2 rootCS =
 	match te1, te2 with
-	  Tvar var, Tcon (Tarrow, [t1; t2]) ->
+	(*  Tvar var, Tcon (Tarrow, [t1; t2]) ->
 		unifyTE1 (Tnode t1) rootCS;
 		unifyTE1 (Tnode t2) rootCS;
 		(te1, te2)
@@ -213,38 +214,40 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		unifyTE1 (Tnode t) rootCS;
 		(*unifyExp e rootCS;*)
 		(te2, te1)
-	| Tvar var1, Tvar var2 ->
+	|*) Tvar var1, Tvar var2 ->
 		(te1, te2);
 	| Tvar var, desc ->
 		(te1, te2);
 	| desc, Tvar var ->
 		(te2, te1);
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->	
-		unifyTE1 (Tnode t11) rootCS;
+		(*unifyTE1 (Tnode t11) rootCS;
 		unifyTE1 (Tnode t12) rootCS;
 		unifyTE1 (Tnode t21) rootCS;
-		unifyTE1 (Tnode t22) rootCS;
+		unifyTE1 (Tnode t22) rootCS;*)
 		let argSubs = unifyTwoTE1 t11.texp_node t21.texp_node rootCS in
-		let _ = applyAndClean argSubs [] rootCS in
+		let _ = applyAndClean argSubs rootCS in
 		let resSubs = unifyTwoTE1 t12.texp_node t22.texp_node rootCS in
 		resSubs
 	| Tlabeled (t1, (Enode e1)), Tlabeled (t2, (Enode e2)) ->
-		unifyTE1 (Tnode t1) rootCS;
-		unifyTE1 (Tnode t2) rootCS;
+		(*unifyTE1 (Tnode t1) rootCS;
+		unifyTE1 (Tnode t2) rootCS;*)
 		(*unifyExp  e1 rootCS;
 		unifyExp  e2 rootCS;*)
 		let typeSubs = unifyTwoTE1 t1.texp_node t2.texp_node rootCS in
-		let _ = applyAndClean typeSubs [] rootCS in
+		let _ = applyAndClean typeSubs rootCS in
 		(*let labSubs = unifyTwoE1 e1 e2 rootCS in*)
 		let labSubs = unifyTwoE e1.eexp_node e2.eexp_node in
-		let _ = applyExpSubs labSubs in (** fixme *)
-		typeSubs (* fixme: in the complete implementation this line should be deleted and the three lines above should be uncommented *)
+		let _ = applyExpSubsCS labSubs rootCS in
+		typeSubs
 	| Tcon (Tint, []), Tcon (Tint, []) ->
 		(Tvar (-1), Tvar (-1));
 	| Tcon (Tbool, []), Tcon (Tbool, []) ->
 		(Tvar (-1), Tvar (-1));
-	| Tcon (Tlab _, []), Tcon (Tlab _, []) ->
+	| Tcon (Tlab l1, []), Tcon (Tlab l2, []) ->
 		(* fixme: expression unification *)
+		let labSubs = unifyTwoE l1.eexp_node l2.eexp_node in
+		let _ = applyExpSubsCS labSubs rootCS in
 		(Tvar (-1), Tvar (-1));
 	| _ ->
 		raise (UnunifyingConstraints ((string_of_short_texp (texp te1))^" != "^(string_of_short_texp (texp te2))));
@@ -254,6 +257,14 @@ unifyTE1 currentTE rootCS =
 		  Tempty ->
 			-3
 		| Tnode node ->
+			begin match node.texp_node with
+			  Tcon (Tarrow, [t1;t2]) ->
+				unifyTE1 (Tnode t1) rootCS; unifyTE1 (Tnode t1) rootCS;
+			| Tlabeled (t, e) ->
+				unifyTE1 (Tnode t) rootCS;
+			| _ ->
+				2
+			end;
 			begin match node.tlink_node with	
 				  Tempty ->
 					(*delSingleInCS rootCS rootCS;*) -4
@@ -264,9 +275,10 @@ unifyTE1 currentTE rootCS =
 							delEqCS rootCS; (*delSingleInCS rootCS rootCS;*) -5
 						(*fixme: error handling is done in unifyTwoTE1 *)	
 						| _  ->
-							applyAndClean subs [] rootCS; -6
+							applyAndClean subs rootCS; -6
 					end;
-					unifyTE1 currentTE rootCS;
+					unifyTE1 (node.tlink_node) rootCS;
+					(*unifyTE1 currentTE rootCS;*) (* fixme: think more about this *)
 			end
 			
 ;;

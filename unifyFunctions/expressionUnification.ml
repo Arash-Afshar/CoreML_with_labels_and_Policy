@@ -172,7 +172,7 @@ let rec eSubsVarOtherCS (ev, another) csNode =
 (* ++++++++++++++++++++++++++++++++++++++++++++++ apply exp substitute +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 
-let rec applyExpSubs (e1, e2) csNode = (* fixme *)
+let rec applyExpSubsCS (e1, e2) csNode = (* fixme *)
 	begin match e1, e2 with
 	  Evar v1, Evar v2 ->
 		eSubsVarVarCS (v1, v2) csNode; 1
@@ -202,19 +202,18 @@ let rec applyExpSubs (e1, e2) csNode = (* fixme *)
 	end
 ;;
 
-let rec applyExpSubsCS subsSet csNode =
+(*let rec applyExpSubsList subsSet csNode =
 	match subsSet with
 		  [] -> -24
 		| _  ->
 			begin
-			applyExpSubs (List.hd subsSet) csNode;
+			applyExpSubsCS (List.hd subsSet) csNode;
 			match csNode.link with
 				  Cnode node ->
-					applyExpSubsCS (List.tl subsSet) csNode; -22
+					applyExpSubsList (List.tl subsSet) csNode; -22
 				| Cempty -> -23
 			end
-;;
-
+;;*)
 (* ============================================== apply exp substitute =============================================== *)
 
 
