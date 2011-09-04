@@ -32,12 +32,23 @@ let rec delNOLs labelList resultList =
 	end
 ;;
 
+(**
+	To solve the problem of label-free variables (rule T-UNLAB), if a label-free variable is found, a NOL will be added to it.
+*)
+(*
 let del_notAll_NOLs labelList resultList =
 	let res = delNOLs labelList resultList in
 	if (List.length res) == 0 then
 		[nol]
 	else
 		res
+;;*)
+
+let del_notAll_NOLs labelList resultList =
+	if (List.length labelList) == 0 then
+		[nol]
+	else
+		labelList
 ;;
 
 let rec delNOLsTE (Tnode te) =

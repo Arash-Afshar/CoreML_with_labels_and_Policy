@@ -1,7 +1,6 @@
 open InferDefs;;
 open PrettyPrinter;;
 open Syntax;;
-open DelNOLs;;
 open DeleteRedundant;;
 open ExpressionUnification;;
 open TypeUnification;;

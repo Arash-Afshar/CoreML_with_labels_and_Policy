@@ -186,7 +186,7 @@ let applyAndClean tSubs cs =
 	let _ = applySubsCS tSubs cs in (* fixme *)
 	(*let _ = applyExpSubsCS eSubs cs in (** fixme *)*)
 	let _ = delEqCS cs in
-	let _ = delNOLsCS in
+	(*let _ = delNOLsCS in*)
 	(*let _ = delSingleInCS cs cs in*)
 		-2
 ;;

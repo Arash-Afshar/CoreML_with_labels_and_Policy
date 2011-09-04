@@ -21,34 +21,35 @@ let int3 = (tlabeled (tarrow (tlabeled tint nol) (tlabeled (tarrow (tlabeled tin
 	| Name ("branch") -> (* T-BRANCH *)
 		let branch =
 			let tAll = tevar() in
-			link t (tlabeled (tarrow (tlabeled tbool nol) (tlabeled (tarrow tAll (tlabeled (tarrow tAll tAll) nol)) nol)) nol); addC t setC in
+			link t  (tlabeled (tarrow (tlabeled tbool nol) (tlabeled (tarrow tAll (tlabeled (tarrow tAll tAll) nol)) nol)) nol); addC t setC in
 		branch
 	| Name ("addLab") -> (* T-RELAB *)
 		let add =
 			let e1			 = evar() in
 			let te1			 = tlabeled (tlab e1) nol in
 			let te2			 = tevar() in
-			let tres		 = (tlabeled te2 e1) in
-			link t (tlabeled (tarrow te1 (tlabeled (tarrow te2 tres) nol)) nol); 
+			let tReturn		 = (tlabeled te2 e1) in
+			link t (tlabeled (tarrow te1 (tlabeled (tarrow te2 tReturn) nol)) nol); (* Should the whole function have the label NOL or not? yes. because in T-APP expects to see a label for the function *)
 			addC t setC in
 		add
 	| Name ("remLab") -> (* T-UNLAB *)
 		let rem =
 			let e2		= evar() in
-			let tPartOf_te1 = tvar() in
+			let tPartOf_te1 = tevar() in (*  *)
 			let te1		= tlabeled tPartOf_te1 e2 in
+			let tReturn	= tPartOf_te1 in
 			(*link t (tlabeled (tarrow te1 (tlabeled tPartOf_te1 nol)) nol); addC t setC in*)
-			link t (tlabeled (tarrow te1 tPartOf_te1) nol); addC t setC in
+			link t (tlabeled (tarrow te1 tReturn) nol); addC t setC in
 			(* fixme: adding nol to tPartOf_te1 leads to stack_overflow *) (* nol is added to tPartOf_te1 to make sure that it has a label even if e2 was its last label *)
 		rem
 	| Name ("getLab") -> (* T-GETLAB *)
 		let get =
 			let e2	 = evar() in
 			let te1	 = tlabeled (tvar()) e2 in
-			let tres = (tlabeled (tlab e2) nol) in
-			link t (tlabeled (tarrow te1 tres) nol); addC t setC in
+			let tReturn = (tlabeled (tlab e2) nol) in
+			link t (tlabeled (tarrow te1 tReturn) nol); addC t setC in
 		get
-	| Lab ("noLab") -> link t (tevar()); addC t setC
+	| Lab ("noLab") -> link t (tlabeled (tlab (eexp (Econ noLab))) (evar())); addC t setC
 	| Lab ("high") -> link t (tlabeled (tlab (eexp (Econ high))) (evar())); addC t setC (* T-HIGH *)
 	| Lab ("low") -> link t (tlabeled (tlab (eexp (Econ low))) (evar())); addC t setC (* T-LOW *)
 	| Name n -> raise  (Undefined_constant n)
@@ -92,6 +93,8 @@ let rec constraintGen tenv e t setC (*(ETnode expType)*) =
 	| Fun (x, e) -> (* T-ABS *)
 		let tX = tevar() and tbody = tevar() in
 		let setC1 = constraintGen (extend tenv (x, tX)) e tbody setC  in
+		let labelList = getAllLabels t in
+		let _ = assertEqual labelList nol in
 		link t (tlabeled (tarrow tX tbody) nol); addC t setC
 	| App (e1, e2) -> (* T-APP *)
 		let te1 = tevar() and te2 = tevar() in
@@ -100,11 +103,11 @@ let rec constraintGen tenv e t setC (*(ETnode expType)*) =
 		let labelList = getAllLabels te1 in
 		let _ = assertEqual labelList nol in
 		link te1 (tlabeled (tarrow te2 t) nol); addC te1 setC
-	| Let (x, e1, e2) -> (* T-LET *) (* fixme: In paper, add the case for [let a b c ... = e1 in e2] *)
+	| Let (x, e1, e2) -> (* T-LET *) (* fixme: In paper, add the case for [let a b c ... = e1 in e2] *) (* also, implement the generalization *)
 		let tfunc = tevar() and te1 = tevar() and te2 = tevar() in
 		let func = create_lam_expr (List.tl x) e1 in
-		constraintGen tenv func te1 setC;
-		constraintGen (extend tenv (List.hd x, tfunc)) e2 te2 setC;
+		let setC1 = constraintGen tenv func te1 setC in
+		let setC2 = constraintGen (extend tenv (List.hd x, tfunc)) e2 te2 setC in
 		link tfunc te1; link t te2; addC tfunc setC; addC t setC
 	| LetP (x, e1, e2) ->
 		let tfunc = tevar() and te1 = tevar() and te2 = tevar() in
