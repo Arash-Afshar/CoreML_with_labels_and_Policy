@@ -36,8 +36,10 @@ let tlab e       = texp (Tcon (Tlab e,  []))
 let tarrow t1 t2 = texp (Tcon (Tarrow, [t1; t2]))
 let tlabeled t e = texp (Tlabeled (t, Enode e))
 let nol          = eexp (Econ noLab);;
+(*
 let zZZZZZZZZZ = eexp (Econ high);;
 let yYYYYYYYYY = eexp (Econ low);;
+*)
 
 let tevar() = tlabeled (tvar()) (evar());;
 

@@ -17,7 +17,21 @@ poly.cmo: unify.cmo
 inferDefs.cmo:
 	ocamlc -g -c inferDefs.ml;
 
-constUnify.cmo:
+unificationFuncs:
+	ocamlc -g -c ./unifyFunctions/delNOLs.ml;
+	ocamlc -g -c ./unifyFunctions/deleteRedundant.ml;
+	ocamlc -g -c ./unifyFunctions/expressionUnification.ml;
+	cp ./unifyFunctions/expressionUnification.cmi ./
+	cp ./unifyFunctions/expressionUnification.cmo ./
+	cp ./unifyFunctions/deleteRedundant.cmi ./
+	cp ./unifyFunctions/deleteRedundant.cmo ./
+	cp ./unifyFunctions/delNOLs.cmi ./
+	cp ./unifyFunctions/delNOLs.cmo ./
+	ocamlc -g -c ./unifyFunctions/typeUnification.ml;
+
+constUnify.cmo: unificationFuncs
+	cp ./unifyFunctions/typeUnification.cmi ./
+	cp ./unifyFunctions/typeUnification.cmo ./
 	ocamlc -g -c constraintUnify.ml;
 
 constPoly.cmo: constUnify.cmo
@@ -49,14 +63,14 @@ prettyPrinter.cmo:
 
 #main
 clean: 
-	rm all;	rm compiler; rm *.cmo; rm *.cmi; rm parser.ml; rm parser.mli; rm lexer.ml;
+	rm all;	rm compiler; rm *.cmo; rm *.cmi; rm parser.ml; rm parser.mli; rm lexer.ml; rm ./unifyFunctions/*.cmo; rm ./unifyFunctions/*.cmi
 
 #body: syntax.cmo reduce.cmo unify.cmo typescheme.cmo poly.cmo prettyPrinter.cmo all.cmo
 #	ocamlc -g -o all syntax.cmo reduce.cmo unify.cmo typescheme.cmo prettyPrinter.cmo all.cmo
 
 
 compiler: syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constPoly.cmo constUnify.cmo parser.cmi  lexer.cmo parser.cmo compiler.cmo
-	ocamlc -g -o compiler syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constraintPolyInfer.cmo constraintUnify.cmo lexer.cmo parser.cmo compiler.cmo 
+	ocamlc -g -o compiler syntax.cmo inferDefs.cmo reduce.cmo prettyPrinter.cmo constraintPolyInfer.cmo delNOLs.cmo deleteRedundant.cmo expressionUnification.cmo typeUnification.cmo constraintUnify.cmo lexer.cmo parser.cmo compiler.cmo 
 
 all: body compiler
 	
