@@ -74,10 +74,25 @@ unifyExp currentTE rootCS =
 
 
 
-
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++ Exp Subs Var with Var +++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
+let eSubsVarVar_InTlabeled ev1 ev2 te t el =
+	begin match el with
+	  Enode node ->
+		begin match node.eexp_node with
+			  Evar v ->
+				if (ev1 == v) then
+					te.texp_node <- (tlabeled t (eexp (Evar ev2))).texp_node;
+					-16
+			| _ ->
+				-18
+		end
+	| _ ->
+		-18
+	end;
+;;
+
 let rec eSubsVarVar (ev1, ev2) te =
 	begin match te.texp_node with
 	  Tvar var0 ->
@@ -89,19 +104,7 @@ let rec eSubsVarVar (ev1, ev2) te =
 			| _ -> -17
 		end
 	| Tlabeled (t, e) ->
-		begin match e with
-		  Enode node ->
-			begin match node.eexp_node with
-				  Evar v ->
-					if (ev1 == v) then
-						te.texp_node <- (tlabeled t (eexp (Evar ev2))).texp_node;
-						-16
-				| _ ->
-					-18
-			end
-		| _ ->
-			-18
-		end;
+		List.map (eSubsVarVar_InTlabeled ev1 ev2 te t) e;
 		eSubsVarVar (ev1, ev2) t; -18
 	| _ -> -19
 	end;
@@ -125,17 +128,7 @@ let rec eSubsVarVarCS (ev1, ev2) csNode =
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with other Exp ++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let rec eSubsVarOther (ev, another) te =
-	begin match te.texp_node with
-	  Tvar var ->
-		-15
-	| Tcon (sym, l)->
-		begin match sym with
-			  Tarrow ->
-				eSubsVarOther (ev, another) (List.hd l); eSubsVarOther (ev, another) (List.hd (List.tl l)); -16
-			| _ -> -17
-		end
-	| Tlabeled (t, e) ->
+let eSubsVarOther_InTlabeled ev another te t e =
 		begin match e with
 		  Enode node ->
 			begin match node.eexp_node with
@@ -149,6 +142,20 @@ let rec eSubsVarOther (ev, another) te =
 		| _ ->
 			-18
 		end;
+;;
+
+let rec eSubsVarOther (ev, another) te =
+	begin match te.texp_node with
+	  Tvar var ->
+		-15
+	| Tcon (sym, l)->
+		begin match sym with
+			  Tarrow ->
+				eSubsVarOther (ev, another) (List.hd l); eSubsVarOther (ev, another) (List.hd (List.tl l)); -16
+			| _ -> -17
+		end
+	| Tlabeled (t, e) ->
+		List.map (eSubsVarOther_InTlabeled ev another te t) e;
 		eSubsVarOther (ev, another) t; -18
 	| _ -> -19
 	end;
@@ -202,7 +209,7 @@ let rec applyExpSubsCS (e1, e2) csNode = (* fixme *)
 	end
 ;;
 
-(*let rec applyExpSubsList subsSet csNode =
+let rec applyExpSubsList subsSet csNode =
 	match subsSet with
 		  [] -> -24
 		| _  ->
@@ -213,7 +220,7 @@ let rec applyExpSubsCS (e1, e2) csNode = (* fixme *)
 					applyExpSubsList (List.tl subsSet) csNode; -22
 				| Cempty -> -23
 			end
-;;*)
+;;
 (* ============================================== apply exp substitute =============================================== *)
 
 

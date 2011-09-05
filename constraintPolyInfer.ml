@@ -72,7 +72,10 @@ let rec create_lam_expr varList expr =
 	else
 		Fun (List.hd varList, create_lam_expr (List.tl varList) expr);;
 
-
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
 let rec assertEqual labelList label =
 	let length = (List.length labelList) in
 	if (length != 0) then
@@ -81,6 +84,10 @@ let rec assertEqual labelList label =
 		assertEqual (List.tl labelList) label
 	end
 ;;
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
+(* ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ *)
 
 (* =================================== poly infer ================================== *)
 
@@ -93,6 +100,7 @@ let rec constraintGen tenv e t setC (*(ETnode expType)*) =
 	| Fun (x, e) -> (* T-ABS *)
 		let tX = tevar() and tbody = tevar() in
 		let setC1 = constraintGen (extend tenv (x, tX)) e tbody setC  in
+		(* fixme *)
 		let labelList = getAllLabels t in
 		let _ = assertEqual labelList nol in
 		link t (tlabeled (tarrow tX tbody) nol); addC t setC

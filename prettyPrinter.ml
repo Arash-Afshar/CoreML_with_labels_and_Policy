@@ -136,7 +136,28 @@ let print_answer a = print_string (string_of_answer a);;
 
 (* =============================================== print type =============================================== *)
 
-let rec string_of_short_texp t=
+let rec string_of_label t label =
+	match label with
+	  Eempty     ->
+		string_of_short_texp t
+	| Enode node ->
+		begin match node.eexp_node with
+		  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
+		| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
+		end
+
+and
+
+string_of_labelList t labelList =
+	let length = List.length labelList in
+	if (length == 0) then
+		""
+	else
+		(string_of_label t (List.hd labelList))^(string_of_labelList t (List.tl labelList))
+
+and
+
+string_of_short_texp t=
 	match tdesc (Tnode t) with
 	  Tvar var -> "a"^string_of_int(var)
 	| Tcon (symb, l) -> 
@@ -155,15 +176,7 @@ let rec string_of_short_texp t=
 		| Tarrow , l -> "( "^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^" )"
 		end
 	| Tlabeled (t, e) ->
-		begin match e with
-			  Eempty     ->
-				string_of_short_texp t
-			| Enode node ->
-				begin match node.eexp_node with
-				  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
-				| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
-				end
-		end
+		string_of_labelList t e
 	| _ -> "Not an texp!"
 ;;
 
@@ -209,15 +222,7 @@ let rec string_of_constraint c =
 				"( "^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^" )"
 		end
 	| { texp_node = Tlabeled (t, e); tlink_node = Tempty; tmark = 0 } ->
-		begin match e with
-			  Eempty     ->
-				string_of_short_texp t
-			| Enode node ->
-				begin match node.eexp_node with
-				  Evar var -> (string_of_short_texp t)^"{ "^("x"^string_of_int var)^" }"
-				| Econ e   -> (string_of_short_texp t)^"{ "^(string_of_concrete_expr e)^" }"
-				end
-		end
+		string_of_labelList t e
 	| { texp_node = d; tlink_node = Tnode u; tmark = 0 } ->
 		(string_of_constraint (texp d))^" = "^(string_of_constraint u)
 	| _ -> "Not an texp!"

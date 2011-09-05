@@ -129,6 +129,12 @@ let rec applySubsList subsSet csNode =
 
 
 
+let decide_Which_Label_Is_Equal_To_Which_Label labelList1 labelList2 =
+	[(Evar 1, Evar 1)]
+;;
+
+
+
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++++ Unify Types ++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
@@ -229,7 +235,7 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		let _ = applyAndClean argSubs rootCS in
 		let resSubs = unifyTwoTE1 t12.texp_node t22.texp_node rootCS in
 		resSubs
-	| Tlabeled (t1, (Enode e1)), Tlabeled (t2, (Enode e2)) ->
+	| Tlabeled (t1, lList1), Tlabeled (t2, lList2) ->
 		(*unifyTE1 (Tnode t1) rootCS;
 		unifyTE1 (Tnode t2) rootCS;*)
 		(*unifyExp  e1 rootCS;
@@ -237,8 +243,9 @@ let rec unifyTwoTE1 te1 te2 rootCS =
 		let typeSubs = unifyTwoTE1 t1.texp_node t2.texp_node rootCS in
 		let _ = applyAndClean typeSubs rootCS in
 		(*let labSubs = unifyTwoE1 e1 e2 rootCS in*)
-		let labSubs = unifyTwoE e1.eexp_node e2.eexp_node in
-		let _ = applyExpSubsCS labSubs rootCS in
+		(*let labSubs = unifyTwoE e1.eexp_node e2.eexp_node in*)
+		let labSubs = decide_Which_Label_Is_Equal_To_Which_Label lList1 lList2 in
+		let _ = applyExpSubsList labSubs rootCS in
 		typeSubs
 	| Tcon (Tint, []), Tcon (Tint, []) ->
 		(Tvar (-1), Tvar (-1));

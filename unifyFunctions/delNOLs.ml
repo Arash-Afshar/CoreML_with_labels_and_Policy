@@ -15,7 +15,7 @@ let rec addBatchLabels labelList labelAcceptingPart =
 ;;
 
 let rec addLabelsToType labelList unlabeledPart parent =
-parent.texp_node <- (addBatchLabels labelList unlabeledPart).texp_node
+	parent.texp_node <- (addBatchLabels labelList unlabeledPart).texp_node
 ;; 
 
 let rec delNOLs labelList resultList =
@@ -44,7 +44,7 @@ let del_notAll_NOLs labelList resultList =
 		res
 ;;*)
 
-let del_notAll_NOLs labelList resultList =
+let del_notAll_NOLs labelList =
 	if (List.length labelList) == 0 then
 		[nol]
 	else
@@ -54,9 +54,9 @@ let del_notAll_NOLs labelList resultList =
 let rec delNOLsTE (Tnode te) =
 	match te.texp_node with
 	  Tlabeled (t, e) ->
-		let labelList = getAllLabels te in
-		let newLabelList = del_notAll_NOLs labelList [] in
-		let unlabeledPart = texp (getUnlabeledPart te) in
+		let labelList = (List.map extract_eenode e) in
+		let newLabelList = del_notAll_NOLs labelList in
+		let unlabeledPart = texp t.texp_node in
 		addLabelsToType newLabelList unlabeledPart te;
 ;;
 
