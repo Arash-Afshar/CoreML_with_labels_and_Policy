@@ -1,2 +1,2 @@
-let a = (lambda x. x+1) in a 2 ;;
+(addLab low) 1 ;;
 

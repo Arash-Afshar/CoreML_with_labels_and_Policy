@@ -7,7 +7,7 @@ and edesc = Evar  of int | Econ of expr;;
 type type_symbol = Tarrow | Tint | Tbool | Tlab of eeeenode
 type ttttnode = { mutable  texp_node : tdesc; mutable tlink_node : texp; mutable  tmark : int }
 and texp = Tempty | Tnode of ttttnode
-and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabeled  of ttttnode * eexp list;;
+and tdesc = Tvar of int | Tcon of type_symbol * ttttnode list | Tlabeled  of ttttnode * eeeenode list;;
 
 let eexp e = { eexp_node = e; elink_node = Eempty; emark = 0 };;
 let texp d = { texp_node = d; tlink_node = Tempty; tmark = 0 };;
@@ -38,9 +38,9 @@ let nol          = eexp (Econ noLab);;
 let tlabeled t e =
 	match t.texp_node with
 	   Tlabeled (t, el) ->
-		texp (Tlabeled (t, (Enode e)::el))
+		texp (Tlabeled (t, el@[e]))
 	| _ ->
-		texp (Tlabeled (t, [Enode e]))
+		texp (Tlabeled (t, [e]))
 ;;
 
 (*
@@ -103,18 +103,24 @@ let tdesc t  =
 let link  t1 t2 = ( repr (Tnode t1)).tlink_node <- (Tnode t2);;
 let elink e1 e2 = (erepr (Enode e1)).elink_node <- (Enode e2);;
 
+let extractEdesc eNode =
+	eNode.eexp_node
+;;
+
+(*
 let extract_eenode (Enode eExp) =
 	eExp
 ;;
 
-
+*)
 let getAllLabels texp =
 	match texp.texp_node with
 		  Tlabeled(t,e) ->
-			List.map extract_eenode e
+			e
 		| _ ->
 			[]
 ;;
+
 
 (*
 let rec getUnlabeledPart t =

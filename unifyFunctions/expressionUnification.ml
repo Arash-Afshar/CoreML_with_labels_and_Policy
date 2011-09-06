@@ -11,13 +11,13 @@ exception UnunifyingConstraints of string;;
 let rec unifyTwoE e1 e2 =
 	match e1, e2 with
 	  Evar v1, Evar v2 ->
-		(Evar v1, Evar v2)
+		(Evar v1, [Evar v2])
 	| Evar v, Econ expr ->
 		(*unifyExp expr;*)
-		(e1, e2)
+		(e1, [e2])
 	| Econ expr, Evar v ->
 		(*unifyExp expr;*)
-		(e2, e1)
+		(e2, [e1])
 	| Econ expr1, Econ expr2 ->
 		begin match expr1, expr2 with
 		  Var v1, Var v2 ->
@@ -25,7 +25,7 @@ let rec unifyTwoE e1 e2 =
 				if (v1 != v2) then
 					raise (UnunifyingConstraints ("expression variables "^v1^" and "^v2^" cannot be unified!")) (* fixme: it might be wrong!*)
 				else
-					(Evar (-1), Evar (-1)) (* means: nothing to do *)
+					(Evar (-1), [Evar (-1)]) (* means: nothing to do *)
 			end
 		(*| Var v, exp -> 1
 		| exp, Var v -> 1*)
@@ -43,11 +43,11 @@ let rec unifyTwoE e1 e2 =
 				let subs2 = unifyTwoE (Econ e2) (Econ e4) in
 				subs2
 			end
-		| Let(vl1, e1, e2), Let(vl2, e3, e4) -> (Evar (-1), Evar (-1))
-		| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> (Evar (-1), Evar (-1))
-		| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> (Evar (-1), Evar (-1))
-		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> (Evar (-1), Evar (-1))
-		| _ -> (Evar (-2), Evar (-2))
+		| Let(vl1, e1, e2), Let(vl2, e3, e4) -> (Evar (-1), [Evar (-1)])
+		| LetP(vl1, e1, e2), LetP(vl2, e3, e4) -> (Evar (-1), [Evar (-1)])
+		| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} -> (Evar (-1), [Evar (-1)])
+		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} -> (Evar (-1), [Evar (-1)])
+		| _ -> (Evar (-2), [Evar (-2)])
 		end
 (*and
 unifyExp currentTE rootCS = 
@@ -77,20 +77,23 @@ unifyExp currentTE rootCS =
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++ Exp Subs Var with Var +++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let eSubsVarVar_InTlabeled ev1 ev2 te t el =
-	begin match el with
-	  Enode node ->
-		begin match node.eexp_node with
+let rec eSubsVarVar_InTlabeled ev1 ev2 labelList resultList =
+	let length = (List.length labelList) in
+	if (length == 0) then
+		resultList
+	else
+	begin
+		let hd = (List.hd labelList) in
+		begin match hd.eexp_node with
 			  Evar v ->
-				if (ev1 == v) then
-					te.texp_node <- (tlabeled t (eexp (Evar ev2))).texp_node;
-					-16
+				if (v == ev1) then
+					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [eexp (Evar ev2)])
+				else
+					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])
 			| _ ->
-				-18
+					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])
 		end
-	| _ ->
-		-18
-	end;
+	end
 ;;
 
 let rec eSubsVarVar (ev1, ev2) te =
@@ -103,8 +106,9 @@ let rec eSubsVarVar (ev1, ev2) te =
 				eSubsVarVar (ev1, ev2) (List.hd l); eSubsVarVar (ev1, ev2) (List.hd (List.tl l)); -16
 			| _ -> -17
 		end
-	| Tlabeled (t, e) ->
-		List.map (eSubsVarVar_InTlabeled ev1 ev2 te t) e;
+	| Tlabeled (t, el) ->
+		let resultantLabels = eSubsVarVar_InTlabeled ev1 ev2 el [] in
+		te.texp_node <- Tlabeled (t, resultantLabels);
 		eSubsVarVar (ev1, ev2) t; -18
 	| _ -> -19
 	end;
@@ -128,20 +132,24 @@ let rec eSubsVarVarCS (ev1, ev2) csNode =
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with other Exp ++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let eSubsVarOther_InTlabeled ev another te t e =
-		begin match e with
-		  Enode node ->
-			begin match node.eexp_node with
-				  Evar v ->
-					if (ev == v) then
-						te.texp_node <- (tlabeled t (eexp another)).texp_node;
-					-16
-				| _ ->
-					-18
-			end
-		| _ ->
-			-18
-		end;
+let rec eSubsVarOther_InTlabeled ev another labelList resultList =
+	let length = (List.length labelList) in
+	if (length == 0) then
+		resultList
+	else
+	begin
+		let hd = (List.hd labelList) in
+		begin match hd.eexp_node with
+			  Evar v ->
+				if (v == ev) then
+					
+					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ (List.map eexp another))
+				else
+					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ [hd])
+			| _ ->
+					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ [hd])
+		end
+	end
 ;;
 
 let rec eSubsVarOther (ev, another) te =
@@ -154,8 +162,9 @@ let rec eSubsVarOther (ev, another) te =
 				eSubsVarOther (ev, another) (List.hd l); eSubsVarOther (ev, another) (List.hd (List.tl l)); -16
 			| _ -> -17
 		end
-	| Tlabeled (t, e) ->
-		List.map (eSubsVarOther_InTlabeled ev another te t) e;
+	| Tlabeled (t, el) ->
+		let resultantLabels = eSubsVarOther_InTlabeled ev another el [] in
+		te.texp_node <- Tlabeled (t, resultantLabels);
 		eSubsVarOther (ev, another) t; -18
 	| _ -> -19
 	end;
@@ -179,34 +188,47 @@ let rec eSubsVarOtherCS (ev, another) csNode =
 (* ++++++++++++++++++++++++++++++++++++++++++++++ apply exp substitute +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 
-let rec applyExpSubsCS (e1, e2) csNode = (* fixme *)
-	begin match e1, e2 with
-	  Evar v1, Evar v2 ->
-		eSubsVarVarCS (v1, v2) csNode; 1
-	| Evar v, another ->
-		eSubsVarOtherCS (v, another) csNode; 2
-	| another, Evar v ->
-		eSubsVarOtherCS (v, another) csNode; 3
-	| Econ expr1, Econ expr2 ->
-		begin match expr1, expr2 with
-		  Var v1, Var v2 ->
-			-4
-		| Fun(v1, e1), Fun(v2, e2) ->
-			-4
-		| App(e1, e2), App(e3, e4) ->
-			-4
-		| Let(vl1, e1, e2), Let(vl2, e3, e4) ->
-			-4
-		| LetP(vl1, e1, e2), LetP(vl2, e3, e4) ->
-			-4
-		| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} ->
-			-4
-		| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} ->
-			-4
-		| _ ->
-			-5 (* fixme: error. the above -4s can also contain error *)
+let rec applyExpSubsCS (e1, el) csNode = (* fixme *)
+	(*print_newline(); print_string "----------------------------------"; print_newline();
+	print_string (string_of_label (eexp e1));
+	print_newline();
+	List.map print_string (List.map string_of_label (List.map eexp el));
+	print_newline(); print_string "----------------------------------"; print_newline();*)
+	if (List.length el) == 1 then
+	begin
+		let e2 = List.hd el in
+		begin match e1, e2 with
+		  Evar v1, Evar v2 ->
+			eSubsVarVarCS (v1, v2) csNode; 1
+		| Evar v, another ->
+			eSubsVarOtherCS (v, [another]) csNode; 2
+		| another, Evar v ->
+			eSubsVarOtherCS (v, [another]) csNode; 3
+		| Econ expr1, Econ expr2 ->
+			begin match expr1, expr2 with
+			  Var v1, Var v2 ->
+				-4
+			| Fun(v1, e1), Fun(v2, e2) ->
+				-4
+			| App(e1, e2), App(e3, e4) ->
+				-4
+			| Let(vl1, e1, e2), Let(vl2, e3, e4) ->
+				-4
+			| LetP(vl1, e1, e2), LetP(vl2, e3, e4) ->
+				-4
+			| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} ->
+				-4
+			| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} ->
+				-4
+			| _ ->
+				-5 (* fixme: error. the above -4s can also contain error *)
+			end
 		end
 	end
+	else
+		let Evar v = e1 in
+		eSubsVarOtherCS (v, el) csNode;
+		-4
 ;;
 
 let rec applyExpSubsList subsSet csNode =

@@ -100,7 +100,7 @@ let rec applySubsCS (te1, te2) csNode =
 		-49
 	| Tcon (Tlab l1, []), Tcon (Tlab l2, []) ->
 		(* fixme: expression substitution *)
-		applyExpSubsCS (l1.eexp_node, l2.eexp_node) csNode;
+		applyExpSubsCS (l1.eexp_node, [l2.eexp_node]) csNode;
 		-50
 	| Tcon (Tarrow, [t11; t12]), Tcon (Tarrow, [t21; t22]) ->
 		-51 (* fixme: error *)
@@ -127,10 +127,76 @@ let rec applySubsList subsSet csNode =
 
 (* ================================================== apply substitute =============================================== *)
 
+let rec makeEqualList labelList1 labelList2 =
+	if (List.length labelList1) == 0 then
+		[]
+	else
+		((List.hd labelList1).eexp_node, [(List.hd labelList2).eexp_node])::(makeEqualList (List.tl labelList1) (List.tl labelList2))
+;;
 
+let rec makeEqual labelList label =
+	if (List.length labelList) == 0 then
+		[]
+	else
+		((List.hd labelList).eexp_node, [label.eexp_node])::(makeEqual (List.tl labelList) label)
+;;
+
+let rec isVar label =
+	match label.eexp_node with
+	  Evar v ->
+		true
+	| _ ->
+		false
+;;
+
+let rec isNOL label =
+	match label.eexp_node with
+	  Econ (Const {name = Lab "noLab";   arity = 0; constr = false}) ->
+		true
+	| _ ->
+		false
+;;
 
 let decide_Which_Label_Is_Equal_To_Which_Label labelList1 labelList2 =
-	[(Evar 1, Evar 1)]
+	let length1 = List.length labelList1 in
+	let length2 = List.length labelList2 in
+	if (length1 == length2) then
+		makeEqualList labelList1 labelList2
+	else if (length1 == 1) then
+		let label = List.hd labelList1 in
+		if (isNOL label) then
+			makeEqual labelList2 label
+		else if (isVar label) then
+			begin
+			(*print_newline(); print_string "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"; print_newline();
+			print_string (string_of_label label);
+			print_newline();
+			print_string (string_of_labelList labelList2);
+			print_newline(); print_string "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"; print_newline();*)
+			[label.eexp_node, List.map extractEdesc labelList2]
+			end
+		else
+			(* fixme: error *)
+			[(Evar (-1), [Evar (-1)])]
+	else if (length2 == 1) then
+		let label = List.hd labelList2 in
+		if (isNOL label) then
+			makeEqual labelList1 label
+		else if (isVar label) then
+			begin
+			(*print_newline(); print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"; print_newline();
+			print_string (string_of_label label);
+			print_newline();
+			print_string (string_of_labelList labelList1);
+			print_newline(); print_string "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ"; print_newline();*)
+			[label.eexp_node, List.map extractEdesc labelList1]
+			end
+		else
+			(* fixme: error *)
+			[(Evar (-1), [Evar (-1)])]
+	else
+		(* fixme: error *)
+		[(Evar (-1), [Evar (-1)])]
 ;;
 
 
@@ -191,7 +257,7 @@ Func3: a function that traverses CS
 let applyAndClean tSubs cs =
 	let _ = applySubsCS tSubs cs in (* fixme *)
 	(*let _ = applyExpSubsCS eSubs cs in (** fixme *)*)
-	let _ = delEqCS cs in
+	(*let _ = delEqCS cs in*)
 	(*let _ = delNOLsCS in*)
 	(*let _ = delSingleInCS cs cs in*)
 		-2
@@ -279,7 +345,7 @@ unifyTE1 currentTE rootCS =
 					let subs = unifyTwoTE1 (node.texp_node) (nextTnode.texp_node) rootCS in
 					begin match subs with
 						  (Tvar (-1), Tvar (-1)) -> (* for optimization, we only delete  equal *)
-							delEqCS rootCS; (*delSingleInCS rootCS rootCS;*) -5
+							(*delEqCS rootCS; delSingleInCS rootCS rootCS;*) -5
 						(*fixme: error handling is done in unifyTwoTE1 *)	
 						| _  ->
 							applyAndClean subs rootCS; -6
