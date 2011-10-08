@@ -73,61 +73,60 @@ unifyExp currentTE rootCS =
 (* ================================================= Unify Expressions ============================================== *)
 
 
-
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++ Exp Subs Var with Var +++++++++++++++++++++++++++++++++++++++++++++ *)
-(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let rec eSubsVarVar_InTlabeled ev1 ev2 labelList resultList =
-	let length = (List.length labelList) in
-	if (length == 0) then
-		resultList
-	else
-	begin
-		let hd = (List.hd labelList) in
-		begin match hd.eexp_node with
-			  Evar v ->
-				if (v == ev1) then
-					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [eexp (Evar ev2)])
-				else
-					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])
-			| _ ->
-					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])
-		end
-	end
-;;
-
-let rec eSubsVarVar (ev1, ev2) te =
-	begin match te.texp_node with
-	  Tvar var0 ->
-		-15
-	| Tcon (sym, l)->
-		begin match sym with
-			  Tarrow ->
-				eSubsVarVar (ev1, ev2) (List.hd l); eSubsVarVar (ev1, ev2) (List.hd (List.tl l)); -16
-			| _ -> -17
-		end
-	| Tlabeled (t, el) ->
-		let resultantLabels = eSubsVarVar_InTlabeled ev1 ev2 el [] in
-		te.texp_node <- Tlabeled (t, resultantLabels);
-		eSubsVarVar (ev1, ev2) t; -18
-	| _ -> -19
-	end;
-	begin match te.tlink_node with
-	  Tnode node ->
-		eSubsVarVar (ev1, ev2) node; -20
-	| Tempty -> -21
-	end
-;;
-
-let rec eSubsVarVarCS (ev1, ev2) csNode =
-	eSubsVarVar (ev1, ev2) csNode.cnstrnt;
-	match csNode.link with
-		  Cnode node ->
-			eSubsVarVarCS (ev1, ev2) node; -22
-		| Cempty -> -23
-;;
-(* ============================================== Exp Subs Var with Var ============================================== *)
-
+(*|                                                                                                                         *)
+(*|(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)*)
+(*|(* +++++++++++++++++++++++++++++++++++++++++++++++ Exp Subs Var with Var +++++++++++++++++++++++++++++++++++++++++++++ *)*)
+(*|(* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)*)
+(*|let rec eSubsVarVar_InTlabeled ev1 ev2 labelList resultList =                                                            *)
+(*|	let length = (List.length labelList) in                                                                                *)
+(*|	if (length == 0) then                                                                                                  *)
+(*|		resultList                                                                                                           *)
+(*|	else                                                                                                                   *)
+(*|	begin                                                                                                                  *)
+(*|		let hd = (List.hd labelList) in                                                                                      *)
+(*|		begin match hd.eexp_node with                                                                                        *)
+(*|			  Evar v ->                                                                                                        *)
+(*|				if (v == ev1) then                                                                                               *)
+(*|					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [emark 0 (eezzxp (Evar ev2))])                *)
+(*|				else                                                                                                             *)
+(*|					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])                                         *)
+(*|			| _ ->                                                                                                             *)
+(*|					eSubsVarVar_InTlabeled ev1 ev2 (List.tl labelList) (resultList @ [hd])                                         *)
+(*|		end                                                                                                                  *)
+(*|	end                                                                                                                    *)
+(*|;;                                                                                                                       *)
+(*|                                                                                                                         *)
+(*|let rec eSubsVarVar (ev1, ev2) te =                                                                                      *)
+(*|	begin match te.texp_node with                                                                                          *)
+(*|	  Tvar var0 ->                                                                                                         *)
+(*|		()                                                                                                                   *)
+(*|	| Tcon (sym, l)->                                                                                                      *)
+(*|		begin match sym with                                                                                                 *)
+(*|			  Tarrow ->                                                                                                        *)
+(*|				eSubsVarVar (ev1, ev2) (List.hd l); eSubsVarVar (ev1, ev2) (List.hd (List.tl l))                                 *)
+(*|			| _ -> ()                                                                                                          *)
+(*|		end                                                                                                                  *)
+(*|	| Tlabeled (t, el) ->                                                                                                  *)
+(*|		let resultantLabels = eSubsVarVar_InTlabeled ev1 ev2 el [] in                                                        *)
+(*|		te.texp_node <- Tlabeled (t, resultantLabels);                                                                       *)
+(*|		eSubsVarVar (ev1, ev2) t                                                                                             *)
+(*|	| _ -> ()                                                                                                              *)
+(*|	end;                                                                                                                   *)
+(*|	begin match te.tlink_node with                                                                                         *)
+(*|	  Tnode node ->                                                                                                        *)
+(*|		eSubsVarVar (ev1, ev2) node                                                                                          *)
+(*|	| Tempty -> ()                                                                                                         *)
+(*|	end                                                                                                                    *)
+(*|;;                                                                                                                       *)
+(*|                                                                                                                         *)
+(*|let rec eSubsVarVarCS (ev1, ev2) csNode =                                                                                *)
+(*|	eSubsVarVar (ev1, ev2) csNode.cnstrnt;                                                                                 *)
+(*|	match csNode.link with                                                                                                 *)
+(*|		  Cnode node ->                                                                                                      *)
+(*|			eSubsVarVarCS (ev1, ev2) node                                                                                      *)
+(*|		| Cempty -> ()                                                                                                       *)
+(*|;;                                                                                                                       *)
+(*|(* ============================================== Exp Subs Var with Var ============================================== *)*)
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++ Subs Var with other Exp ++++++++++++++++++++++++++++++++++++++++++++ *)
@@ -142,8 +141,8 @@ let rec eSubsVarOther_InTlabeled ev another labelList resultList =
 		begin match hd.eexp_node with
 			  Evar v ->
 				if (v == ev) then
-					
-					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ (List.map eexp another))
+(*|					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ (List.map (emark 1) (List.map eexp another)))*)
+					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ (List.map eeyxp another))
 				else
 					eSubsVarOther_InTlabeled ev another (List.tl labelList) (resultList @ [hd])
 			| _ ->
@@ -155,23 +154,23 @@ let rec eSubsVarOther_InTlabeled ev another labelList resultList =
 let rec eSubsVarOther (ev, another) te =
 	begin match te.texp_node with
 	  Tvar var ->
-		-15
+		()
 	| Tcon (sym, l)->
 		begin match sym with
 			  Tarrow ->
-				eSubsVarOther (ev, another) (List.hd l); eSubsVarOther (ev, another) (List.hd (List.tl l)); -16
-			| _ -> -17
+				eSubsVarOther (ev, another) (List.hd l); eSubsVarOther (ev, another) (List.hd (List.tl l))
+			| _ -> ()
 		end
 	| Tlabeled (t, el) ->
 		let resultantLabels = eSubsVarOther_InTlabeled ev another el [] in
 		te.texp_node <- Tlabeled (t, resultantLabels);
-		eSubsVarOther (ev, another) t; -18
-	| _ -> -19
+		eSubsVarOther (ev, another) t
+	| _ -> ()
 	end;
 	begin match te.tlink_node with
 	  Tnode node ->
-		eSubsVarOther (ev, another) node; -20
-	| Tempty -> -21
+		eSubsVarOther (ev, another) node
+	| Tempty -> ()
 	end
 ;;
 
@@ -179,8 +178,8 @@ let rec eSubsVarOtherCS (ev, another) csNode =
 	eSubsVarOther (ev, another) csNode.cnstrnt;
 	match csNode.link with
 		  Cnode node ->
-			eSubsVarOtherCS (ev, another) node; -22
-		| Cempty -> -23
+			eSubsVarOtherCS (ev, another) node
+		| Cempty -> ()
 ;;
 (* ============================================= Subs Var with other Exp ============================================= *)
 
@@ -199,48 +198,47 @@ let rec applyExpSubsCS (e1, el) csNode = (* fixme *)
 		let e2 = List.hd el in
 		begin match e1, e2 with
 		  Evar v1, Evar v2 ->
-			eSubsVarVarCS (v1, v2) csNode; 1
+			eSubsVarOtherCS (v1, [e2]) csNode
 		| Evar v, another ->
-			eSubsVarOtherCS (v, [another]) csNode; 2
+			eSubsVarOtherCS (v, [another]) csNode
 		| another, Evar v ->
-			eSubsVarOtherCS (v, [another]) csNode; 3
+			eSubsVarOtherCS (v, [another]) csNode
 		| Econ expr1, Econ expr2 ->
 			begin match expr1, expr2 with
 			  Var v1, Var v2 ->
-				-4
+				()
 			| Fun(v1, e1), Fun(v2, e2) ->
-				-4
+				()
 			| App(e1, e2), App(e3, e4) ->
-				-4
+				()
 			| Let(vl1, e1, e2), Let(vl2, e3, e4) ->
-				-4
+				()
 			| LetP(vl1, e1, e2), LetP(vl2, e3, e4) ->
-				-4
+				()
 			| Const {name = Int n1;    arity = 0; constr = true}, Const {name = Int n2;    arity = 0; constr = true} ->
-				-4
+				()
 			| Const {name = Bool b1;   arity = 0; constr = true}, Const {name = Bool b2;   arity = 0; constr = true} ->
-				-4
+				()
 			| _ ->
-				-5 (* fixme: error. the above -4s can also contain error *)
+				() (* fixme: error. the above -4s can also contain error *)
 			end
 		end
 	end
 	else
 		let Evar v = e1 in
-		eSubsVarOtherCS (v, el) csNode;
-		-4
+		eSubsVarOtherCS (v, el) csNode
 ;;
 
 let rec applyExpSubsList subsSet csNode =
 	match subsSet with
-		  [] -> -24
+		  [] -> ()
 		| _  ->
 			begin
 			applyExpSubsCS (List.hd subsSet) csNode;
 			match csNode.link with
 				  Cnode node ->
-					applyExpSubsList (List.tl subsSet) csNode; -22
-				| Cempty -> -23
+					applyExpSubsList (List.tl subsSet) csNode
+				| Cempty -> ()
 			end
 ;;
 (* ============================================== apply exp substitute =============================================== *)

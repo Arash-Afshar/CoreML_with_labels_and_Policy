@@ -1,0 +1,27 @@
+../aux.cmo: 
+../aux.cmx: 
+../constraintPolyInfer.cmo: 
+../constraintPolyInfer.cmx: 
+../constraintUnify.cmo: 
+../constraintUnify.cmx: 
+../inferDefs.cmo: 
+../inferDefs.cmx: 
+../parser.cmo: ../parser.cmi 
+../parser.cmx: ../parser.cmi 
+../prettyPrinter.cmo: 
+../prettyPrinter.cmx: 
+../reduce.cmo: 
+../reduce.cmx: 
+../syntax.cmo: 
+../syntax.cmx: 
+../unifyFunctions/deleteRedundant.cmo: 
+../unifyFunctions/deleteRedundant.cmx: 
+../unifyFunctions/delNOLs.cmo: 
+../unifyFunctions/delNOLs.cmx: 
+../unifyFunctions/expressionUnification.cmo: 
+../unifyFunctions/expressionUnification.cmx: 
+../unifyFunctions/typeUnification.cmo: 
+../unifyFunctions/typeUnification.cmx: 
+../compiler.cmo: 
+../compiler.cmx: 
+../parser.cmi: 

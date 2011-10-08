@@ -4,20 +4,7 @@ open Reduce;;
 open ConstraintPolyInfer;;
 open ConstraintUnify;;
 open InferDefs;;
-(*open Poly;;
-open Unify;;*)
 
-
-(*
-let c  = csInit in
-let _  = (addC (texp (Tvar 2)) c) in
-let c1 = (texp (Tvar 3)) in
-let _  = addC c1 c in
-(*let e = Let ( ["a"] , Fun ("x" , Var "x") , App( Var "a" , Const { name = Int 2; constr = true; arity = 0})) in
-let t = tvar() and cs = csInit in
-let _ = genConstrSet e t cs in*)
-	print_constraint_set (Cnode c); print_newline();;
-*)
 
 
 let _ =
@@ -25,7 +12,7 @@ let _ =
 		let lexbuf = Lexing.from_channel (open_in Sys.argv.(1) ) in
 		while true do
 			let result = Parser.main Lexer.token lexbuf in
-			let t = tevar() and cs = csInit in
+			let t = tevar() and cs = csInit() in
 			(*let etPair = (ETnode initExpTypePair) in*)
 			let _ = genConstrSet result t cs (*etPair*) in
 			(*print_string("concrete syntax of expression="); print_newline(); print_concrete_expr(result); print_newline(); print_newline();

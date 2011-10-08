@@ -55,7 +55,7 @@ let rec delNOLsTE (Tnode te) =
 	match te.texp_node with
 	  Tlabeled (t, e) ->
 		let newLabelList = del_notAll_NOLs e in
-		let unlabeledPart = texp t.texp_node in
+		let unlabeledPart = t in
 		addLabelsToType newLabelList unlabeledPart te;
 ;;
 

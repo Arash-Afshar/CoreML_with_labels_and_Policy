@@ -140,65 +140,24 @@ let rec string_of_label label =
 	match label.eexp_node with
 	  Evar var -> "{ "^("x"^string_of_int var)^" }"
 	| Econ e   -> "{ "^(string_of_concrete_expr e)^" }"
+;;
 
-and
-
-string_of_labelList labelList =
+let rec string_of_labelList labelList =
 	let length = List.length labelList in
 	if (length == 0) then
 		""
 	else
 		(string_of_label (List.hd labelList))^(string_of_labelList (List.tl labelList))
-
-and
-
-string_of_short_texp t=
-	match tdesc (Tnode t) with
-	  Tvar var -> "a"^string_of_int(var)
-	| Tcon (symb, l) -> 
-		begin match symb, l with
-		  Tint, _ -> "int"
-		| Tbool, _ -> "bool"
-		| Tlab e, _ -> "lab"
-(*
-			begin match e.eexp_node with
-				  Evar var ->
-					"x"^(string_of_int var)
-				| Econ e   ->
-					(string_of_concrete_expr e)
-			end
-*)
-		| Tarrow , l -> "( "^string_of_short_texp(List.hd(l))^" -> "^string_of_short_texp(List.hd(List.tl(l)))^" )"
-		end
-	| Tlabeled (t, e) ->
-		(string_of_short_texp t)^(string_of_labelList e)
-	| _ -> "Not an texp!"
 ;;
 
-let print_type t = print_string (string_of_short_texp t);;
-
-(* =============================================== print expression type =============================================== *)
-(*
-let rec string_of_expTypePair etPair =
-	match etPair with
-	  ETempty     -> ""
-	| ETnode node ->
-		"("^(string_of_concrete_expr (node.etExp))^") : "^(string_of_short_texp node.etType)^"\n";
-		string_of_expTypePair (node.etLink)
-;;
-
-let print_expType et = print_string ("["^(string_of_expTypePair et)^"]")
-*)
-(* =============================================== print constraint set =============================================== *)
-
-let rec string_of_constraint c =
-	match c with
-	  { texp_node = Tvar var; tlink_node = Tempty; tmark = 0 } -> 
+let rec string_of_type t=
+	match t with
+	  { texp_node = Tvar var; tlink_node = Tempty; tmark = _ } -> 
 		begin match var with
 		  -1 -> ""
 		| _  -> "a"^string_of_int(var)
 		end
-	| { texp_node = Tcon (symb, l); tlink_node = Tempty; tmark = 0 } -> 
+	| { texp_node = Tcon (symb, l); tlink_node = Tempty; tmark = _ } -> 
 		begin match symb, l with
 		  Tint, _ -> "int"
 		| Tbool, _ -> "bool"
@@ -214,20 +173,68 @@ let rec string_of_constraint c =
 		| Tarrow , l -> 
 			let t1 = List.hd(l) in
 			let t2 = List.hd(List.tl(l)) in
-				"( "^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^" )"
+				"( "^(string_of_type t1)^" -> "^(string_of_type t2)^" )"
 		end
-	| { texp_node = Tlabeled (t, e); tlink_node = Tempty; tmark = 0 } ->
-		(string_of_short_texp t)^(string_of_labelList e)
-	| { texp_node = d; tlink_node = Tnode u; tmark = 0 } ->
-		(string_of_constraint (texp d))^" = "^(string_of_constraint u)
-	| _ -> "Not an texp!"
+	| { texp_node = Tlabeled (t, e); tlink_node = Tempty; tmark = _ } ->
+		(string_of_type t)^(string_of_labelList e)
+	| { texp_node = d; tlink_node = Tnode u; tmark = _ } ->
+		(string_of_type (teyxp d))^" = "^(string_of_type u)
+	| _ -> "Not a texp!"
 ;;
+
+let print_type t = print_string (string_of_type t);;
+
+(* =============================================== print expression type =============================================== *)
+(*
+let rec string_of_expTypePair etPair =
+	match etPair with
+	  ETempty     -> ""
+	| ETnode node ->
+		"("^(string_of_concrete_expr (node.etExp))^") : "^(string_of_short_texp node.etType)^"\n";
+		string_of_expTypePair (node.etLink)
+;;
+
+let print_expType et = print_string ("["^(string_of_expTypePair et)^"]")
+*)
+(* =============================================== print constraint set =============================================== *)
+
+(*|let rec string_of_constraint c =                                          *)
+(*|	match c with                                                            *)
+(*|	  { texp_node = Tvar var; tlink_node = Tempty; tmark = _ } ->           *)
+(*|		begin match var with                                                  *)
+(*|		  -1 -> ""                                                            *)
+(*|		| _  -> "a"^string_of_int(var)                                        *)
+(*|		end                                                                   *)
+(*|	| { texp_node = Tcon (symb, l); tlink_node = Tempty; tmark = _ } ->     *)
+(*|		begin match symb, l with                                              *)
+(*|		  Tint, _ -> "int"                                                    *)
+(*|		| Tbool, _ -> "bool"                                                  *)
+(*|		| Tlab e, _ -> "lab"                                                  *)
+(*|(*                                                                        *)
+(*|			begin match e.eexp_node with                                        *)
+(*|				  Evar var ->                                                     *)
+(*|					"x"^(string_of_int var)                                         *)
+(*|				| Econ e   ->                                                     *)
+(*|					(string_of_concrete_expr e)                                     *)
+(*|			end                                                                 *)
+(*|*)                                                                        *)
+(*|		| Tarrow , l ->                                                       *)
+(*|			let t1 = List.hd(l) in                                              *)
+(*|			let t2 = List.hd(List.tl(l)) in                                     *)
+(*|				"( "^string_of_constraint(t1)^" -> "^string_of_constraint(t2)^" )"*)
+(*|		end                                                                   *)
+(*|	| { texp_node = Tlabeled (t, e); tlink_node = Tempty; tmark = _ } ->    *)
+(*|		(string_of_short_texp t)^(string_of_labelList e)                      *)
+(*|	| { texp_node = d; tlink_node = Tnode u; tmark = _ } ->                 *)
+(*|		(string_of_constraint (teyxp d))^" = "^(string_of_constraint u)       *)
+(*|	| _ -> "Not a texp!"                                                    *)
+(*|;;                                                                        *)
 
 let rec string_of_constraint_set cs =
 	match cs with
 	  Cempty  -> ""
 	| Cnode c -> 
-		(string_of_constraint c.cnstrnt)^", \n"^(string_of_constraint_set c.link)
+		(string_of_type c.cnstrnt)^", \n"^(string_of_constraint_set c.link)
 ;;
 
 let print_constraint_set cs =
@@ -238,7 +245,7 @@ let print_constraint_set cs =
 (* =============================================== print substitution set =============================================== *)
 
 let string_of_subs (te1, te2) =
-	"["^(string_of_short_texp (texp te1))^" ==> "^(string_of_short_texp (texp te2))^"]\n";;
+	"["^(string_of_type (teyxp te1))^" ==> "^(string_of_type (teyxp te2))^"]\n";;
 
 let print_subsSet sl =
 	List.map print_string (List.map string_of_subs sl);;

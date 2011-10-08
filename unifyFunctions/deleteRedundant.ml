@@ -1,41 +1,11 @@
 open InferDefs;;
 open PrettyPrinter;;
 open Syntax;;
+open Aux;;
 
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* ++++++++++++++++++++++++++++++++++++++++++++++++++ Delete Redundant +++++++++++++++++++++++++++++++++++++++++++++++ *)
 (* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *)
-let areExpEqual e1 e2 = true;; (* fixme *)
-
-let areTvarsEqual (Tvar tv1) (Tvar tv2) =
-	if (tv1 == tv2) then
-		true
-	else
-		false
-;;
-
-let rec areTarrowsEqual (Tcon (Tarrow, [arg11; arg12])) (Tcon (Tarrow, [arg21; arg22])) =
-	let firstArg  = areTexpEqual arg11.texp_node arg21.texp_node in
-	let secondArg = areTexpEqual arg12.texp_node arg22.texp_node in
-		firstArg & secondArg
-
-and
-
-areTexpEqual te1 te2 =
-	match te1, te2 with
-		  Tvar var1, Tvar var2 ->
-			areTvarsEqual te1 te2
-		| Tcon (Tarrow, _), Tcon (Tarrow, _) ->
-			areTarrowsEqual te1 te2
-		| Tcon (Tint, _), Tcon (Tint, _) -> true
-		| Tcon (Tbool, _), Tcon (Tbool, _) -> true
-		| Tcon (Tlab _, _), Tcon (Tlab _, _) -> true (* fixme *)
-		| Tlabeled (t1, e1), Tlabeled (t2, e2) ->
-			let t = areTexpEqual t1.texp_node t2.texp_node in
-			let e = areExpEqual e1 e2 in
-				t & e
-		| _ -> false
-;;
 
 let rec delEqTE (Tnode te) =
 	match te.tlink_node with

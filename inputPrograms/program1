@@ -1,0 +1,3 @@
+let f = (lambda x.x) in
+	f (lambda x.(x + (f 1)))
+;;

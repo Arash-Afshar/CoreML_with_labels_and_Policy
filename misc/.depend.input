@@ -1,0 +1,16 @@
+../aux.ml
+../compiler.ml
+../constraintPolyInfer.ml
+../constraintUnify.ml
+../inferDefs.ml
+../lexer.mll
+../lexer.mll
+../parser.ml
+../parser.mli
+../prettyPrinter.ml
+../reduce.ml
+../syntax.ml
+../unifyFunctions/deleteRedundant.ml
+../unifyFunctions/delNOLs.ml
+../unifyFunctions/expressionUnification.ml
+../unifyFunctions/typeUnification.ml
