@@ -7,6 +7,7 @@ rule token = parse
 	  [' ' '\n' '\t']		{ token lexbuf }     (* skip blanks *)
 	| '('			{ LP }
 	| ')'			{ RP }
+	| "policy"		{ POLICY }	(* label *)
 	| "high"		{ HIGH }	(* label *)
 	| "low"			{ LOW }		(* label *)
 	| "lambda"		{ LAM }

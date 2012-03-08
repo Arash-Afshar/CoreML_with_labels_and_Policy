@@ -1,0 +1,11 @@
+let policy b =
+	(addLab low) 1 in
+	let policy lift a =
+		if ((getLab a)==low) then
+			(addLab high) remLab a
+		else
+			a
+
+		in
+		lift ((lambda x.x) b)
+;;

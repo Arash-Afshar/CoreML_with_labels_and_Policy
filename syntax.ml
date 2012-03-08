@@ -1,14 +1,19 @@
-type name = Name  of string | Int  of int | Bool of bool | Lab of string;; (* label *)
-type constant = { name  : name; constr : bool; arity : int}
+type name = Name of string | Int of int | Bool of bool | Lab of string;; (* label *)
+type color = string;;
+type constant = { name : name; constr : bool; arity : int}
 type var = string
+type varList = var list;;
 type expr =
-	| Var of var
+	| Var   of var
 	| Const of constant
-	| Fun of var  * expr
-	| App of expr * expr
-	| Let of var  * expr * expr;;
+	| Fun   of var     * expr
+	| App   of expr    * expr
+	| Let   of varList * expr * expr
+	| LetP  of varList * expr * expr;;				(* label *)
 
 
+let int n  = Const {name = Int n;    arity = 0; constr = true}
+let bool b = Const {name = Bool b;   arity = 0; constr = true}
 let plus   = Const {name = Name "+";  arity = 2; constr = false}
 let minus  = Const {name = Name "-";  arity = 2; constr = false}
 let times  = Const {name = Name "*";  arity = 2; constr = false}
@@ -17,9 +22,7 @@ let gt     = Const {name = Name ">";  arity = 2; constr = false}
 let lt     = Const {name = Name "<";  arity = 2; constr = false}
 let eq     = Const {name = Name "=="; arity = 2; constr = false}
 let ne     = Const {name = Name "!="; arity = 2; constr = false}
-let branch = Const {name = Name "branch"; arity = 3; constr = false}
-let int n  = Const {name = Int n;     arity = 0; constr = true}
-let bool b = Const {name = Bool b;   arity = 0; constr = true};;
+let branch = Const {name = Name "branch"; arity = 3; constr = false};;
 
 
 let addLab = Const {name = Name "addLab"; arity = 2; constr = false} (* label *)

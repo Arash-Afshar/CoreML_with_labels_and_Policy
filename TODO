@@ -1,2 +1,1 @@
-Remove Static Semantics related operations from reduce.ml
-for example, in reduce.ml when adding a and b we should not check whether they are integers or not, since this check is supposed to be done in poly.ml
+recheck Tlabeled usage to inconsistencies between old and new definitino of Tlabeled
