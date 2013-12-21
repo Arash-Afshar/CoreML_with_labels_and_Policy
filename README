@@ -1,9 +1,9 @@
-This code is intended to be an simple implementation of a the paper titled "Reconstructing security types 
-for automated policy enforcement in FABLE".
+This code is intended to be a simple implementation of the paper titled "Reconstructing security types 
+for automated policy enforcement in FABLE". This paper aims to propose formal constructs needed to have
+an automated policy insertion and verification in a functional language, such as ML.
 
-This paper aims to propose formal constructs needed to have an automated policy insertion and verification
-in a functional language, such as ML. This code, implements these constructs and is a branch of my previous
-custom implementation of a simple ML language (call CoreML).
+This code implements these constructs and is a branch of my previous work (a custom implementation of a 
+simple ML language (called CoreML)).
 
 The code is released under normal GPL terms.
 
